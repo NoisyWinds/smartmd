@@ -5,6 +5,6 @@ export default function (editor) {
   alert.className = "smartmd__alert";
   cmElement.parentNode.append(alert);
 
-  return alert;
+  editor.gui.alert = alert;
 }
 

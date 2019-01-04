@@ -65,6 +65,3 @@ export function observe(value) {
   if (!isObject(value)) return false;
   return new Observer(value);
 }
-
-
-

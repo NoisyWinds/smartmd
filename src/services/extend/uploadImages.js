@@ -6,7 +6,7 @@ export function checkImage(file) {
   let maxSize = options.uploads.maxSize;
   let type = options.uploads.type;
   let suffix = file.name.toLowerCase().split(".").splice(-1)[0];
-  let delay = this.options.alert.defaultDelay;
+  let delay = this.options.alertDelay;
 
   if (type.indexOf(suffix) === -1) {
     this.alert(`Image support format <strong>${type.join(",")}</strong>.`, delay, "error");
@@ -22,10 +22,11 @@ export function checkImage(file) {
 export default function (file) {
   let options = this.options;
   let cm = this.codemirror;
-  let delay = this.options.alert.defaultDelay;
+  let delay = this.options.alertDelay;
   let url = options.uploads.url;
 
-  Reflect.apply(checkImage, this, [file]);
+  // image validator
+  if (!Reflect.apply(checkImage, this, [file])) return;
 
   let from = cm.getCursor("start");
   let uploadWidget = buildUploadWidget();
@@ -73,8 +74,6 @@ export default function (file) {
   let token = getToken();
   if (token) xhr.setRequestHeader("X-CSRF-TOKEN", token);
   xhr.send(formData);
-
-  return true;
 }
 
 

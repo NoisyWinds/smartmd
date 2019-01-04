@@ -284,6 +284,5 @@ export default function () {
     } else {
       replaceSelection(cm, false, ["`", "`"]);
     }
-
   }
 }

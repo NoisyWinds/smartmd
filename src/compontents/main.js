@@ -17,7 +17,6 @@ export default function (editor) {
   wrapper.appendChild(cmElement);
   wrapper.appendChild(options.el);
   editor.gui.wrapper = wrapper;
-  console.log(editor);
 
   buildPreview(editor);
   buildAlert(editor);

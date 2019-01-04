@@ -16,5 +16,4 @@ export default function () {
       ch: 99999999999999
     });
   }
-
 }

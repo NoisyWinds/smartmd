@@ -18,7 +18,6 @@ const watchers = {
 
 export default function (editor) {
   const options = editor.options;
-  console.log(editor);
   if (options.isFixedToolbar) Reflect.apply(initFixedToolbar, editor, []);
   if (isObject(options.autoSave)) Reflect.apply(initAutoSave, editor, []);
   for (let name in watchers) {

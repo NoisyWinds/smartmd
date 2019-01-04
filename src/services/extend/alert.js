@@ -1,8 +1,8 @@
 import {addClass, removeClass} from "../utils";
 
 export default function (content, delay, theme) {
-  let wrapper = this.gui.alert;
-  theme = this.options.alert.theme[theme] || this.options.alert.theme.success;
+  let alertWrapper = this.gui.alert;
+  theme = this.options.alertTheme[theme] || this.options.alertTheme.success;
 
   let block = document.createElement("div");
   let button = document.createElement("button");
@@ -10,7 +10,7 @@ export default function (content, delay, theme) {
   block.className = `smartmd__alert__item ${theme.className}`;
   block.innerHTML = `<i class='${theme.icon}'></i>${content}`;
   block.appendChild(button);
-  wrapper.appendChild(block);
+  alertWrapper.appendChild(block);
 
   setTimeout(() => {
     addClass(block, "smartmd__alert__item--fadeIn")
