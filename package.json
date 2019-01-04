@@ -1,0 +1,61 @@
+{
+  "name": "smartmd",
+  "version": "1.0.0",
+  "description": "Markdown editor support most syntax",
+  "keywords": [
+    "markdown",
+    "editor",
+    "javascript"
+  ],
+  "scripts": {
+    "dev": "rollup -w -c scripts/config.js --environment TARGET:development",
+    "production": "rollup -c scripts/config.js --environment TARGET:production",
+    "esm": "rollup -c scripts/config.js --environment TARGET:esm",
+    "cjs": "rollup -c scripts/config.js --environment TARGET:cjs",
+    "build": "node scripts/build.js",
+    "lint": "eslint src"
+  },
+  "homepage": "https://github.com/NoisyWinds/smartmd-editor",
+  "main": "./src/js/smartmd.min.js",
+  "types": "./types/index.d.ts",
+  "license": "MIT",
+  "author": {
+    "name": "NoisyWinds",
+    "Email": "noisywinds@gmail.com"
+  },
+  "bugs": {
+    "url": "https://github.com/NoisyWinds/smartmd-editor/issues"
+  },
+  "dependencies": {
+    "codemirror": "^5.42.0",
+    "markdown-it": "^8.4.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.2.0",
+    "@babel/plugin-transform-runtime": "^7.2.0",
+    "@babel/preset-env": "^7.2.0",
+    "@babel/runtime": "^7.2.0",
+    "autoprefixer": "^9.4.2",
+    "babel-eslint": "^10.0.1",
+    "cssnano": "^4.1.7",
+    "eslint": "^5.10.0",
+    "eslint-plugin-flowtype": "^3.2.0",
+    "node-sass": "^4.11.0",
+    "resolve": "^1.3.3",
+    "rollup": "^0.66.6",
+    "rollup-plugin-babel": "^4.0.3",
+    "rollup-plugin-commonjs": "^9.2.0",
+    "rollup-plugin-flow-no-whitespace": "^1.0.0",
+    "rollup-plugin-json": "^3.1.0",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-postcss": "^1.6.3",
+    "rollup-plugin-replace": "^2.0.0",
+    "terser": "^3.11.0",
+    "zlib": "^1.0.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NoisyWinds/smartmd-editor"
+  }
+}
