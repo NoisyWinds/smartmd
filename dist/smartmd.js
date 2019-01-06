@@ -30136,14 +30136,20 @@
     isObject(val) ? Reflect.apply(initAutoSave, this.parent, []) : clearAutoSaved();
   }
 
+  function preview() {
+    Reflect.apply(togglePreview, this.parent, []);
+  }
+
   var watchers = {
     isFixedToolbar: isFixedToolbar,
-    autoSave: autoSave
+    autoSave: autoSave,
+    preview: preview
   };
   function initState (editor) {
     var options = editor.options;
     if (options.isFixedToolbar) Reflect.apply(initFixedToolbar, editor, []);
     if (isObject(options.autoSave)) Reflect.apply(initAutoSave, editor, []);
+    if (options.preview !== false) Reflect.apply(togglePreview, editor, []);
 
     for (var name in watchers) {
       if (watchers.hasOwnProperty(name)) {
