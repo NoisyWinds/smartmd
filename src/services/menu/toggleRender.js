@@ -1,33 +1,37 @@
-import {addClass, getClass, removeClass} from "../utils"
+import {addClass, removeClass} from "../utils"
+
+export let isRenderActive = false;
 
 export default function () {
-  let toolbar = this.gui.toolbar;
-  let render = this.gui.render;
+  const toolbar = this.gui.toolbar;
+  const render = this.gui.render;
 
-  if (getClass(render, "smartmd__render--active")) {
+  if (isRenderActive) {
     removeClass(render, "smartmd__render--active");
-
-    if (toolbar) {
-      let button = this.gui.toolbarElements.render;
-      if (button) removeClass(button, "active");
-      removeClass(toolbar, "smartmd__toolbar--disabled");
-    }
-
     setTimeout(() => {
       render.style.display = "none";
+      isRenderActive = false;
+
+      if (!toolbar) return;
+      const button = this.gui.toolbarElements.render;
+      // toggleRender button maybe hidden
+      if (button) removeClass(button, "active");
+      removeClass(toolbar, "smartmd__toolbar--disabled");
     }, 150)
   } else {
-    let renderBody = this.gui.renderBody;
+    const renderBody = this.gui.renderBody;
 
     if (toolbar) {
-      let button = this.gui.toolbarElements.render;
+      const button = this.gui.toolbarElements.render;
+      if (button) addClass(button, "active");
       addClass(toolbar, "smartmd__toolbar--disabled");
-      addClass(button, "active");
     }
 
     renderBody.innerHTML = this.markdown.render(this.value());
     render.style.display = "block";
+    isRenderActive = true;
 
+    // set renderBody enter animation
     setTimeout(() => {
       addClass(render, "smartmd__render--active")
     }, 0)

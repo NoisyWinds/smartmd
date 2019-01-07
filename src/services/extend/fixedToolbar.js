@@ -21,7 +21,7 @@ function checkHeight() {
   }
 }
 
-export function initFixedToolbar() {
+export function startFixedToolbar() {
   toolbar = this.gui.toolbar;
   let ele = toolbar;
   toolbarTop = toolbar.offsetTop;

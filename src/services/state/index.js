@@ -1,35 +1,65 @@
 import Watcher from "../observer/Watcher";
-import {clearFixed, initFixedToolbar} from "../extend/fixedToolbar";
-import {clearAutoSaved, initAutoSave} from "../extend/autoSave";
+import {clearFixed, startFixedToolbar} from "../extend/fixedToolbar";
+import {clearAutoSaved, startAutoSave} from "../extend/autoSave";
 import {isObject} from "../utils";
-import togglePreview from "../menu/togglePreview";
 
 function isFixedToolbar(val) {
-  val ? Reflect.apply(initFixedToolbar, this.parent, []) : clearFixed()
+  val ? startFixedToolbar.apply(this) : clearFixed()
 }
 
 function autoSave(val) {
-  isObject(val) ? Reflect.apply(initAutoSave, this.parent, []) : clearAutoSaved()
+  isObject(val) ? startAutoSave.apply(this) : clearAutoSaved()
 }
 
-function preview() {
-  Reflect.apply(togglePreview, this.parent, [])
+function isRenderActive() {
+  this.toggleRender()
+}
+
+function isFullScreen() {
+  this.toggleFullScreen()
+}
+
+function isPreviewActive() {
+  this.togglePreview()
+}
+
+function height(val) {
+  this.resize(null, val)
+}
+
+function width(val) {
+  this.resize(val, null)
 }
 
 const watchers = {
   isFixedToolbar,
   autoSave,
-  preview
+  isRenderActive,
+  isFullScreen,
+  isPreviewActive,
+  height,
+  width
 };
 
 export default function (editor) {
   const options = editor.options;
-  if (options.isFixedToolbar) Reflect.apply(initFixedToolbar, editor, []);
-  if (isObject(options.autoSave)) Reflect.apply(initAutoSave, editor, []);
-  if (options.preview !== false) Reflect.apply(togglePreview, editor, []);
+
+  // init editor state with options
+  if (options.isFixedToolbar) startFixedToolbar.apply(editor);
+  if (isObject(options.autoSave)) startAutoSave.apply(editor);
+  if (options.isFullScreen) editor.toggleFullScreen();
+  if (options.isPreviewActive) editor.togglePreview();
+  if (options.width) editor.resize(options.width, null);
+  if (options.height) editor.resize(null, options.height);
+
+  let wClass = [];
+  // watch options change
   for (let name in watchers) {
     if (watchers.hasOwnProperty(name)) {
-      new Watcher(editor.options, name, watchers[name])
+      let watch = new Watcher(options, name, watchers[name].bind(editor));
+      wClass.push(watch);
     }
   }
+
+  return wClass;
 }

@@ -1,4 +1,6 @@
-import {addClass, getClass, removeClass, toggleClass} from "../utils";
+import {addClass, removeClass, toggleClass} from "../utils";
+
+export let isFullScreen = false;
 
 export default function () {
   let cm = this.codemirror;
@@ -11,13 +13,16 @@ export default function () {
   if (toolbar) {
     let button = this.gui.toolbarElements.fullscreen;
     toggleClass(toolbar, "smartmd__toolbar--full");
-    toggleClass(button, "active");
+    if (button) toggleClass(button, "active");
   }
-  if (getClass(preview, "smartmd__preview--full")) {
+
+  if (isFullScreen) {
     removeClass(preview, "smartmd__preview--full");
     preview.style.height = this.options.height;
+    isFullScreen = false;
   } else {
     addClass(preview, "smartmd__preview--full");
     preview.style.height = "auto";
+    isFullScreen = true;
   }
 }

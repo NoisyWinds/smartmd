@@ -5,10 +5,10 @@ import CodeMirrorConfig from './CodeMirrorConfig'
 import toolbarConfig from './toolbar'
 
 const blockStyles = {
-  "bold": "**",
-  "code": "```",
-  "italic": "*",
-  "strikethrough": "~~"
+  bold: "**",
+  code: "```",
+  italic: "*",
+  strikethrough: "~~"
 };
 
 const insertTexts = {
@@ -22,12 +22,12 @@ const insertTexts = {
 
 
 export default {
-  height: 400,
-  isFixedToolbar: true,
-  statusbar: ["autoSave", "lines", "words", "cursor","block"],
+  isFullScreen: false,
+  isPreviewActive: false,
+  statusbar: ['autoSave', 'lines', 'words', 'cursor', 'block'],
   uploadsPath: "./upload",
   uploads: {
-    type: ["jpeg", "png", "bmp", "gif", "jpg"],
+    type: ['jpeg', 'png', 'bmp', 'gif', 'jpg'],
     maxSize: 4096
   },
   alertDelay: 5000,

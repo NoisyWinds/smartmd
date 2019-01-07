@@ -1,19 +1,8 @@
 import uploadImages from "./uploadImages"
 import alert from "./alert"
-import {def, getClass} from "../utils";
+import {def} from "../utils";
 import {autoSaveUpdate, clearAutoSaved, clearAutoSavedValue, startAutoSave} from "./autoSave";
 
-function isPreviewActive() {
-  return getClass(this.gui.preview, "smartmd__preview--active")
-}
-
-function isRenderActive() {
-  return getClass(this.gui.render, "smartmd__render--active")
-}
-
-function isFullScreen() {
-  return this.codemirror.getOption("fullScreen");
-}
 
 function toTextArea() {
   let gui = this.gui;
@@ -26,17 +15,25 @@ function toTextArea() {
   this.codemirror.toTextArea();
 }
 
-function setSize(width, height) {
-  width = isNaN(width) ? width : `${width}px`;
-  height = isNaN(height) ? height : `${height}px`;
-  this.options.width = width;
-  this.options.height = height;
+
+function resize(width, height) {
+  let gui = this.gui;
+  if (width) {
+    width = isNaN(width) ? width : `${width}px`;
+    gui.wrapper.style.width = width;
+  }
+  if (height) {
+    const toolbarHeight = gui.toolbar.offsetHeight;
+    const statusbarHeight = gui.statusbar.offsetHeight;
+    height = parseInt(height, 10);
+    gui.wrapper.style.height = `${height}px`;
+    height = height - toolbarHeight - statusbarHeight;
+    this.codemirror.setSize(null, `${height}px`)
+  }
 }
 
+
 export const ext = {
-  isPreviewActive,
-  isRenderActive,
-  isFullScreen,
   toTextArea,
   alert,
   uploadImages,
@@ -44,7 +41,7 @@ export const ext = {
   clearAutoSaved,
   clearAutoSavedValue,
   startAutoSave,
-  setSize
+  resize
 };
 
 export default function (editor) {

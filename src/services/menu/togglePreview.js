@@ -1,45 +1,57 @@
-import {addClass, getClass, removeClass, toggleClass} from "../utils";
+import {addClass, removeClass} from '../utils';
+import {isFullScreen} from "./toggleFullScreen";
 
-export default function () {
-  let cm = this.codemirror;
-  let cmElement = cm.getWrapperElement();
-  let preview = this.gui.preview;
-  let toolbar = this.gui.toolbar;
-  let usePreviewRender = false;
+export let isPreviewActive = false;
 
-  toggleClass(preview, "smartmd__preview--active");
-  toggleClass(cmElement, "CodeMirror-sided");
+function startPreview() {
+  const cm = this.codemirror;
+  const cmElement = cm.getWrapperElement();
+  const preview = this.gui.preview;
+  addClass(preview, "smartmd__preview--active");
+  addClass(cmElement, "CodeMirror-sided");
+  preview.innerHTML = this.markdown.render(this.value());
+  cm.on('update', cm.renderPreviewFn);
+}
 
-  if (cm.getOption("fullScreen")) {
+function removePreview() {
+  const cm = this.codemirror;
+  const cmElement = cm.getWrapperElement();
+  const preview = this.gui.preview;
+  removeClass(preview, "smartmd__preview--active");
+  removeClass(cmElement, "CodeMirror-sided");
+  cm.off('update', cm.renderPreviewFn);
+}
+
+export default function togglePreview() {
+  const toolbar = this.gui.toolbar;
+  const cm = this.codemirror;
+  const preview = this.gui.preview;
+  let icon = false;
+
+  if (!cm.renderPreviewFn) {
+    cm.renderPreviewFn = () => {
+      preview.innerHTML = this.markdown.render(this.value());
+    };
+  }
+
+  if (toolbar) icon = this.gui.toolbarElements.preview;
+
+  if (isPreviewActive) {
+    removePreview.apply(this);
+    if (icon) removeClass(icon, "active");
+    isPreviewActive = false;
+  } else {
+    startPreview.apply(this);
+    if (icon) addClass(icon, "active");
+    isPreviewActive = true;
+  }
+
+  if (isFullScreen) {
     addClass(preview, "smartmd__preview--full");
     preview.style.height = "auto";
   } else {
     removeClass(preview, "smartmd__preview--full");
     preview.style.height = this.options.height;
-  }
-
-  if (toolbar) {
-    let button = this.gui.toolbarElements.preview;
-    toggleClass(button, "active");
-  }
-
-  if (getClass(preview, "smartmd__preview--active")) {
-    usePreviewRender = true;
-  }
-
-  let previewRender = function () {
-    preview.innerHTML = this.markdown.render(this.value());
-  }.bind(this);
-
-  if (!cm.previewRender) {
-    cm.previewRender = previewRender;
-  }
-
-  if (usePreviewRender) {
-    preview.innerHTML = this.markdown.render(this.value());
-    cm.on("update", cm.previewRender);
-  } else {
-    cm.off("update", cm.previewRender);
   }
 
   cm.refresh();

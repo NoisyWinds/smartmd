@@ -3,7 +3,6 @@ import {isLocalStorage, isObject} from "../utils";
 let loaded,
   interval,
   autoSaveOptions,
-  delay,
   el,
   uuid = false;
 
@@ -18,7 +17,7 @@ function getOptions() {
   return false;
 }
 
-function update(editor) {
+function update() {
   let d = new Date();
   let h = d.getHours();
   let m = d.getMinutes();
@@ -27,7 +26,7 @@ function update(editor) {
   h = h < 10 ? "0" + h : h;
   s = s < 10 ? "0" + s : s;
   el.innerHTML = `auto saved at: ${h}:${m}:${s}`;
-  localStorage.setItem(uuid, editor.value());
+  localStorage.setItem(uuid, this.value());
 }
 
 export function clearAutoSaved() {
@@ -42,30 +41,24 @@ export function clearAutoSavedValue() {
 }
 
 export function autoSaveUpdate() {
-  if (loaded) update(this)
+  if (loaded) update.apply(this)
 }
 
 export function startAutoSave() {
-  if (!interval) {
-    interval = setInterval(() => update(this), delay)
-  }
-}
-
-export function initAutoSave() {
   autoSaveOptions = this.options.autoSave;
   el = this.options.autoSaveElement;
+
   if (!getOptions()) return;
   uuid = autoSaveOptions.uuid;
-  delay = autoSaveOptions.delay || 5000;
+  let delay = autoSaveOptions.delay || 5000;
 
   let text = localStorage.getItem(uuid);
-  if (text) {
-    this.codemirror.setValue(text)
-  }
+  if (text) this.codemirror.setValue(text);
 
   loaded = true;
 
   // restart autoSave need clear interval
   clearAutoSaved();
-  Reflect.apply(startAutoSave, this, []);
+  update.apply(this);
+  interval = setInterval(update.bind(this), delay)
 }

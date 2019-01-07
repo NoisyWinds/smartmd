@@ -21,16 +21,17 @@ export class Smartmd {
     }
     new Observer(opt);
     this.options = opt;
-    this.options.parent = this;
     this.utils = utils;
 
-    // write function under class Smartmd
+    // toolbar list active function
     initMenu(this);
+    // Smartmd Class extend function
     initExtend(this);
+
     this.markdown = MarkdownIt(this);
     this.codemirror = CodeMirror(this);
     initGui(this);
-    initState(this);
+    this.watchers = initState(this);
   }
 
   value(text) {
@@ -45,7 +46,7 @@ export class Smartmd {
     if (utils.isObject(options)) utils.assign(this.options, options)
   }
 
-  getOption(option) {
+  get(option) {
     return this.options[option];
   }
 }

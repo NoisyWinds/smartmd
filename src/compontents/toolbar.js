@@ -1,5 +1,5 @@
 import {menuList} from "../services/menu";
-import {addClass, fixShortcut, inArray, isObject, isUrl, removeClass} from "../services/utils";
+import {addClass, fixShortcut, inArray, isUrl, removeClass} from "../services/utils";
 import shortcuts from "../config/shortcuts";
 import getState from "../services/codemirror/getState";
 

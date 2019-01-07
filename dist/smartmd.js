@@ -10688,83 +10688,7 @@
     remove: remove
   });
 
-  function togglePreview () {
-    var cm = this.codemirror;
-    var cmElement = cm.getWrapperElement();
-    var preview = this.gui.preview;
-    var toolbar = this.gui.toolbar;
-    var usePreviewRender = false;
-    toggleClass(preview, "smartmd__preview--active");
-    toggleClass(cmElement, "CodeMirror-sided");
-
-    if (cm.getOption("fullScreen")) {
-      addClass(preview, "smartmd__preview--full");
-      preview.style.height = "auto";
-    } else {
-      removeClass(preview, "smartmd__preview--full");
-      preview.style.height = this.options.height;
-    }
-
-    if (toolbar) {
-      var button = this.gui.toolbarElements.preview;
-      toggleClass(button, "active");
-    }
-
-    if (getClass(preview, "smartmd__preview--active")) {
-      usePreviewRender = true;
-    }
-
-    var previewRender = function () {
-      preview.innerHTML = this.markdown.render(this.value());
-    }.bind(this);
-
-    if (!cm.previewRender) {
-      cm.previewRender = previewRender;
-    }
-
-    if (usePreviewRender) {
-      preview.innerHTML = this.markdown.render(this.value());
-      cm.on("update", cm.previewRender);
-    } else {
-      cm.off("update", cm.previewRender);
-    }
-
-    cm.refresh();
-  }
-
-  function toggleRender () {
-    var toolbar = this.gui.toolbar;
-    var render = this.gui.render;
-
-    if (getClass(render, "smartmd__render--active")) {
-      removeClass(render, "smartmd__render--active");
-
-      if (toolbar) {
-        var button = this.gui.toolbarElements.render;
-        if (button) removeClass(button, "active");
-        removeClass(toolbar, "smartmd__toolbar--disabled");
-      }
-
-      setTimeout(function () {
-        render.style.display = "none";
-      }, 150);
-    } else {
-      var renderBody = this.gui.renderBody;
-
-      if (toolbar) {
-        var _button = this.gui.toolbarElements.render;
-        addClass(toolbar, "smartmd__toolbar--disabled");
-        addClass(_button, "active");
-      }
-
-      renderBody.innerHTML = this.markdown.render(this.value());
-      render.style.display = "block";
-      setTimeout(function () {
-        addClass(render, "smartmd__render--active");
-      }, 0);
-    }
-  }
-
+  var isFullScreen = false;
   function toggleFullScreen () {
     var cm = this.codemirror;
     var toolbar = this.gui.toolbar;
@@ -10775,15 +10699,112 @@
     if (toolbar) {
       var button = this.gui.toolbarElements.fullscreen;
       toggleClass(toolbar, "smartmd__toolbar--full");
-      toggleClass(button, "active");
+      if (button) toggleClass(button, "active");
     }
 
-    if (getClass(preview, "smartmd__preview--full")) {
+    if (isFullScreen) {
       removeClass(preview, "smartmd__preview--full");
       preview.style.height = this.options.height;
+      isFullScreen = false;
     } else {
       addClass(preview, "smartmd__preview--full");
       preview.style.height = "auto";
+      isFullScreen = true;
+    }
+  }
+
+  var isPreviewActive = false;
+
+  function startPreview() {
+    var cm = this.codemirror;
+    var cmElement = cm.getWrapperElement();
+    var preview = this.gui.preview;
+    addClass(preview, "smartmd__preview--active");
+    addClass(cmElement, "CodeMirror-sided");
+    preview.innerHTML = this.markdown.render(this.value());
+    cm.on('update', cm.renderPreviewFn);
+  }
+
+  function removePreview() {
+    var cm = this.codemirror;
+    var cmElement = cm.getWrapperElement();
+    var preview = this.gui.preview;
+    removeClass(preview, "smartmd__preview--active");
+    removeClass(cmElement, "CodeMirror-sided");
+    cm.off('update', cm.renderPreviewFn);
+  }
+
+  function togglePreview() {
+    var _this = this;
+
+    var toolbar = this.gui.toolbar;
+    var cm = this.codemirror;
+    var preview = this.gui.preview;
+    var icon = false;
+
+    if (!cm.renderPreviewFn) {
+      cm.renderPreviewFn = function () {
+        preview.innerHTML = _this.markdown.render(_this.value());
+      };
+    }
+
+    if (toolbar) icon = this.gui.toolbarElements.preview;
+
+    if (isPreviewActive) {
+      removePreview.apply(this);
+      if (icon) removeClass(icon, "active");
+      isPreviewActive = false;
+    } else {
+      startPreview.apply(this);
+      if (icon) addClass(icon, "active");
+      isPreviewActive = true;
+    }
+
+    if (isFullScreen) {
+      addClass(preview, "smartmd__preview--full");
+      preview.style.height = "auto";
+    } else {
+      removeClass(preview, "smartmd__preview--full");
+      preview.style.height = this.options.height;
+    }
+
+    cm.refresh();
+  }
+
+  var isRenderActive = false;
+  function toggleRender () {
+    var _this = this;
+
+    var toolbar = this.gui.toolbar;
+    var render = this.gui.render;
+
+    if (isRenderActive) {
+      removeClass(render, "smartmd__render--active");
+      setTimeout(function () {
+        render.style.display = "none";
+        isRenderActive = false;
+        if (!toolbar) return;
+        var button = _this.gui.toolbarElements.render; // toggleRender button maybe hidden
+
+        if (button) removeClass(button, "active");
+        removeClass(toolbar, "smartmd__toolbar--disabled");
+      }, 150);
+    } else {
+      var renderBody = this.gui.renderBody;
+
+      if (toolbar) {
+        var button = this.gui.toolbarElements.render;
+        if (button) addClass(button, "active");
+        addClass(toolbar, "smartmd__toolbar--disabled");
+      }
+
+      renderBody.innerHTML = this.markdown.render(this.value());
+      render.style.display = "block";
+      isRenderActive = true; // set renderBody enter animation
+
+      setTimeout(function () {
+        addClass(render, "smartmd__render--active");
+      }, 0);
     }
   }
 
@@ -13388,10 +13409,10 @@
   };
 
   var blockStyles = {
-    "bold": "**",
-    "code": "```",
-    "italic": "*",
-    "strikethrough": "~~"
+    bold: "**",
+    code: "```",
+    italic: "*",
+    strikethrough: "~~"
   };
   var insertTexts = {
     link: ["[link name](https://", "#text#)"],
@@ -13402,12 +13423,12 @@
     chart: ["```\ngraph LR\nA[Square Rect] -- Link text --> B((Circle))\nA --> C(Round Rect)\nB --> D{Rhombus}\nC --> D", "\n```"]
   };
   var defaults = {
-    height: 400,
-    isFixedToolbar: true,
-    statusbar: ["autoSave", "lines", "words", "cursor", "block"],
+    isFullScreen: false,
+    isPreviewActive: false,
+    statusbar: ['autoSave', 'lines', 'words', 'cursor', 'block'],
     uploadsPath: "./upload",
     uploads: {
-      type: ["jpeg", "png", "bmp", "gif", "jpg"],
+      type: ['jpeg', 'png', 'bmp', 'gif', 'jpg'],
       maxSize: 4096
     },
     alertDelay: 5000,
@@ -29767,7 +29788,6 @@
   var loaded,
       interval,
       autoSaveOptions,
-      delay,
       el$1,
       uuid = false;
 
@@ -29784,7 +29804,7 @@
     return false;
   }
 
-  function update(editor) {
+  function update() {
     var d = new Date();
     var h = d.getHours();
     var m = d.getMinutes();
@@ -29793,7 +29813,7 @@
     h = h < 10 ? "0" + h : h;
     s = s < 10 ? "0" + s : s;
     el$1.innerHTML = "auto saved at: ".concat(h, ":").concat(m, ":").concat(s);
-    localStorage.setItem(uuid, editor.value());
+    localStorage.setItem(uuid, this.value());
   }
 
   function clearAutoSaved() {
@@ -29806,45 +29826,21 @@
     if (uuid) localStorage.removeItem(uuid);
   }
   function autoSaveUpdate() {
-    if (loaded) update(this);
+    if (loaded) update.apply(this);
   }
   function startAutoSave() {
-    var _this = this;
-
-    if (!interval) {
-      interval = setInterval(function () {
-        return update(_this);
-      }, delay);
-    }
-  }
-  function initAutoSave() {
     autoSaveOptions = this.options.autoSave;
     el$1 = this.options.autoSaveElement;
     if (!getOptions()) return;
     uuid = autoSaveOptions.uuid;
-    delay = autoSaveOptions.delay || 5000;
+    var delay = autoSaveOptions.delay || 5000;
     var text = localStorage.getItem(uuid);
-
-    if (text) {
-      this.codemirror.setValue(text);
-    }
-
+    if (text) this.codemirror.setValue(text);
     loaded = true; // restart autoSave need clear interval
 
     clearAutoSaved();
-    Reflect.apply(startAutoSave, this, []);
-  }
-
-  function isPreviewActive() {
-    return getClass(this.gui.preview, "smartmd__preview--active");
-  }
-
-  function isRenderActive() {
-    return getClass(this.gui.render, "smartmd__render--active");
-  }
-
-  function isFullScreen() {
-    return this.codemirror.getOption("fullScreen");
+    update.apply(this);
+    interval = setInterval(update.bind(this), delay);
   }
 
   function toTextArea() {
@@ -29858,17 +29854,25 @@
     this.codemirror.toTextArea();
   }
 
-  function setSize(width, height) {
-    width = isNaN(width) ? width : "".concat(width, "px");
-    height = isNaN(height) ? height : "".concat(height, "px");
-    this.options.width = width;
-    this.options.height = height;
+  function resize(width, height) {
+    var gui = this.gui;
+
+    if (width) {
+      width = isNaN(width) ? width : "".concat(width, "px");
+      gui.wrapper.style.width = width;
+    }
+
+    if (height) {
+      var toolbarHeight = gui.toolbar.offsetHeight;
+      var statusbarHeight = gui.statusbar.offsetHeight;
+      height = parseInt(height, 10);
+      gui.wrapper.style.height = "".concat(height, "px");
+      height = height - toolbarHeight - statusbarHeight;
+      this.codemirror.setSize(null, "".concat(height, "px"));
+    }
   }
 
   var ext = {
-    isPreviewActive: isPreviewActive,
-    isRenderActive: isRenderActive,
-    isFullScreen: isFullScreen,
     toTextArea: toTextArea,
     alert: alert,
     uploadImages: uploadImages,
@@ -29876,7 +29880,7 @@
     clearAutoSaved: clearAutoSaved,
     clearAutoSavedValue: clearAutoSavedValue,
     startAutoSave: startAutoSave,
-    setSize: setSize
+    resize: resize
   };
   function initExtend (editor) {
     for (var name in ext) {
@@ -30115,7 +30119,7 @@
     }
   }
 
-  function initFixedToolbar() {
+  function startFixedToolbar() {
     toolbar = this.gui.toolbar;
     var ele = toolbar;
     toolbarTop = toolbar.offsetTop;
@@ -30129,33 +30133,61 @@
   }
 
   function isFixedToolbar(val) {
-    val ? Reflect.apply(initFixedToolbar, this.parent, []) : clearFixed();
+    val ? startFixedToolbar.apply(this) : clearFixed();
   }
 
   function autoSave(val) {
-    isObject(val) ? Reflect.apply(initAutoSave, this.parent, []) : clearAutoSaved();
+    isObject(val) ? startAutoSave.apply(this) : clearAutoSaved();
   }
 
-  function preview() {
-    Reflect.apply(togglePreview, this.parent, []);
+  function isRenderActive$1() {
+    this.toggleRender();
+  }
+
+  function isFullScreen$1() {
+    this.toggleFullScreen();
+  }
+
+  function isPreviewActive$1() {
+    this.togglePreview();
+  }
+
+  function height(val) {
+    this.resize(null, val);
+  }
+
+  function width(val) {
+    this.resize(val, null);
   }
 
   var watchers = {
     isFixedToolbar: isFixedToolbar,
     autoSave: autoSave,
-    preview: preview
+    isRenderActive: isRenderActive$1,
+    isFullScreen: isFullScreen$1,
+    isPreviewActive: isPreviewActive$1,
+    height: height,
+    width: width
   };
   function initState (editor) {
-    var options = editor.options;
-    if (options.isFixedToolbar) Reflect.apply(initFixedToolbar, editor, []);
-    if (isObject(options.autoSave)) Reflect.apply(initAutoSave, editor, []);
-    if (options.preview !== false) Reflect.apply(togglePreview, editor, []);
+    var options = editor.options; // init editor state with options
+
+    if (options.isFixedToolbar) startFixedToolbar.apply(editor);
+    if (isObject(options.autoSave)) startAutoSave.apply(editor);
+    if (options.isFullScreen) editor.toggleFullScreen();
+    if (options.isPreviewActive) editor.togglePreview();
+    if (options.width) editor.resize(options.width, null);
+    if (options.height) editor.resize(null, options.height);
+    var wClass = []; // watch options change
 
     for (var name in watchers) {
       if (watchers.hasOwnProperty(name)) {
-        new Watcher(editor.options, name, watchers[name]);
+        var watch = new Watcher(options, name, watchers[name].bind(editor));
+        wClass.push(watch);
       }
     }
+
+    return wClass;
   }
 
   var Smartmd =
@@ -30174,15 +30206,15 @@
 
       new Observer(opt);
       this.options = opt;
-      this.options.parent = this;
-      this.utils = utils; // write function under class Smartmd
+      this.utils = utils; // toolbar list active function
 
-      initMenu(this);
+      initMenu(this); // Smartmd Class extend function
+
       initExtend(this);
       this.markdown = MarkdownIt$1(this);
       this.codemirror = CodeMirror$1(this);
       initGui(this);
-      initState(this);
+      this.watchers = initState(this);
     }
 
     _createClass(Smartmd, [{
@@ -30201,8 +30233,8 @@
         if (isObject(options)) assign(this.options, options);
       }
     }, {
-      key: "getOption",
-      value: function getOption(option) {
+      key: "get",
+      value: function get(option) {
         return this.options[option];
       }
     }]);
