@@ -18,11 +18,9 @@ export default function () {
 
   if (isFullScreen) {
     removeClass(preview, "smartmd__preview--full");
-    preview.style.height = this.options.height;
     isFullScreen = false;
   } else {
     addClass(preview, "smartmd__preview--full");
-    preview.style.height = "auto";
     isFullScreen = true;
   }
 }

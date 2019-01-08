@@ -1,35 +1,21 @@
 export default function (editor) {
-  let cm = editor.codemirror;
-  let cmElement = cm.getWrapperElement();
-  let preview = document.createElement("div");
-  let cScroll = false;
-  let pScroll = false;
+  const cm = editor.codemirror;
+  const cmElement = cm.getWrapperElement();
+  const preview = document.createElement("div");
+  const scrollbar = document.createElement("div");
+  const scrollbarChild = document.createElement("div");
+  const content = document.createElement("div");
 
-  preview.className = "smartmd__preview markdown-body";
+  preview.className = "smartmd__preview ";
+  scrollbar.className = "smartmd__preview__scrollbar";
+  content.className = "smartmd__preview__content markdown-body";
+  scrollbarChild.style.minWidth = "1px";
 
-  cm.on("scroll", (v) => {
-    if (cScroll) {
-      cScroll = false;
-      return;
-    }
-    pScroll = true;
-    let height = v.getScrollInfo().height - v.getScrollInfo().clientHeight;
-    let ratio = parseFloat(v.getScrollInfo().top) / height;
-    preview.scrollTop = (preview.scrollHeight - preview.clientHeight) * ratio;
-  });
-
-  preview.onscroll = () => {
-    if (pScroll) {
-      pScroll = false;
-      return;
-    }
-    cScroll = true;
-    let height = preview.scrollHeight - preview.clientHeight;
-    let ratio = parseFloat(preview.scrollTop) / height;
-    let move = (cm.getScrollInfo().height - cm.getScrollInfo().clientHeight) * ratio;
-    cm.scrollTo(0, move);
-  };
-
+  scrollbar.appendChild(scrollbarChild);
+  preview.appendChild(scrollbar);
+  preview.appendChild(content);
   cmElement.parentNode.append(preview);
   editor.gui.preview = preview;
+  editor.gui.previewScrollbar = scrollbar;
+  editor.gui.previewContent = content;
 }

@@ -2,12 +2,14 @@
 
 .CodeMirror {
   /* Set height, width, borders, and global font properties here */
-    height: auto;
-    padding: 10px;
-    font: inherit;
-    z-index: 1;
-    box-sizing: border-box;
-    background: 0 0;
+  width: 100%;
+  height: auto;
+  top: 3em;
+  bottom: 2.4em;
+  font: inherit;
+  z-index: 1;
+  box-sizing: border-box;
+  background: 0 0;
 }
 
 /* PADDING */
@@ -171,9 +173,8 @@
   font-style: italic;
 }
 
-.cm-emoji{
-  background: #fff7db;
-  margin:0 2px;
+.cm-emoji {
+  background-color: #ffd3d8;
 }
 
 .cm-link {
@@ -294,7 +295,7 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {
    the editor. You probably shouldn't touch them. */
 
 .CodeMirror {
-  position: relative;
+  position: absolute;
   overflow: hidden;
   background: white;
 }
@@ -328,6 +329,7 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {
 .CodeMirror-vscrollbar {
   right: 0;
   top: 0;
+  outline: 0;
   overflow-x: hidden;
   overflow-y: scroll;
 }
@@ -544,83 +546,83 @@ span.CodeMirror-selectedtext {
 /* */
 
 .CodeMirror-scroll {
-    margin-bottom: -35px;
-    margin-right: -35px;
-    padding-bottom: 35px;
-    height: 100%
+  margin-bottom: -35px;
+  margin-right: -35px;
+  padding-bottom: 35px;
+  height: 100%
 }
 
 .CodeMirror-fullscreen {
-    background: #fff;
-    position: fixed !important;
-    top: 50px;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: auto;
-    z-index: 9
+  background: #fff;
+  position: fixed !important;
+  top: 3em;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: auto;
+  z-index: 9
 }
 
 .CodeMirror-sided {
-    float: left;
-    width: 50% !important
+  float: left;
+  width: 50% !important
 }
 
 .CodeMirror .CodeMirror-code .cm-tag {
-    color: #63a35c
+  color: #63a35c
 }
 
 .CodeMirror .CodeMirror-code .cm-attribute {
-    color: #795da3
+  color: #795da3
 }
 
 .CodeMirror .CodeMirror-code .cm-string {
-    color: #183691
+  color: #183691
 }
 
 .CodeMirror .CodeMirror-code .cm-header-1 {
-    font-size: 200%;
-    line-height: 200%
+  font-size: 200%;
+  line-height: 200%
 }
 
 .CodeMirror .CodeMirror-code .cm-header-2 {
-    font-size: 160%;
-    line-height: 160%
+  font-size: 160%;
+  line-height: 160%
 }
 
 .CodeMirror .CodeMirror-code .cm-header-3 {
-    font-size: 125%;
-    line-height: 125%
+  font-size: 125%;
+  line-height: 125%
 }
 
 .CodeMirror .CodeMirror-code .cm-header-4 {
-    font-size: 110%;
-    line-height: 110%
+  font-size: 110%;
+  line-height: 110%
 }
 
 .CodeMirror .CodeMirror-code .cm-comment {
-    background: #ededed;
-    border-radius: 2px
+  background: #ededed;
+  border-radius: 2px
 }
 
 .CodeMirror .CodeMirror-code .cm-math {
-    background-color: #e7f8fa;
+  background-color: #e7f8fa;
 }
 
 .CodeMirror .CodeMirror-code .cm-link {
-    color: #3490dc
+  color: #3490dc
 }
 
 .CodeMirror .CodeMirror-code .cm-url {
-    color: #3490dc
+  color: #3490dc
 }
 
 .CodeMirror .CodeMirror-code .cm-strikethrough {
-    text-decoration: line-through
+  text-decoration: line-through
 }
 
 .CodeMirror .CodeMirror-placeholder {
-    opacity: .6;
-    font-size: 1em;
-    letter-spacing: 1px
+  opacity: .6;
+  font-size: 1em;
+  letter-spacing: 1px
 }

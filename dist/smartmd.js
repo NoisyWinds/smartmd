@@ -9950,7 +9950,7 @@
       }
     }
 
-    if (ch === ":" && stream.match(/^[^: \\]+:/)) {
+    if (ch === ":" && stream.match(/^[^: \\/?'"]+:/)) {
       return "emoji";
     }
 
@@ -10704,11 +10704,9 @@
 
     if (isFullScreen) {
       removeClass(preview, "smartmd__preview--full");
-      preview.style.height = this.options.height;
       isFullScreen = false;
     } else {
       addClass(preview, "smartmd__preview--full");
-      preview.style.height = "auto";
       isFullScreen = true;
     }
   }
@@ -10719,9 +10717,10 @@
     var cm = this.codemirror;
     var cmElement = cm.getWrapperElement();
     var preview = this.gui.preview;
+    var previewContent = this.gui.previewContent;
     addClass(preview, "smartmd__preview--active");
     addClass(cmElement, "CodeMirror-sided");
-    preview.innerHTML = this.markdown.render(this.value());
+    previewContent.innerHTML = this.markdown.render(this.value());
     cm.on('update', cm.renderPreviewFn);
   }
 
@@ -10740,11 +10739,67 @@
     var toolbar = this.gui.toolbar;
     var cm = this.codemirror;
     var preview = this.gui.preview;
+    var previewScrollbar = this.gui.previewScrollbar;
+    var previewContent = this.gui.previewContent;
     var icon = false;
+    var cmScroll = false;
+    var pScroll = false;
+    var originScroll = false;
+    cm.on("scroll", function (v) {
+      if (cmScroll) {
+        cmScroll = false;
+        return;
+      }
+
+      pScroll = true;
+      originScroll = true;
+      var height = v.getScrollInfo().height - v.getScrollInfo().clientHeight;
+      var ratio = parseFloat(v.getScrollInfo().top) / height;
+      var top = (previewScrollbar.scrollHeight - previewScrollbar.clientHeight) * ratio;
+      previewScrollbar.scrollTop = top;
+      previewContent.scrollTop = top;
+    });
+
+    previewScrollbar.onscroll = function () {
+      if (pScroll) {
+        pScroll = false;
+        return;
+      }
+
+      cmScroll = true;
+      originScroll = true;
+      var height = this.scrollHeight - this.clientHeight;
+      var ratio = parseFloat(this.scrollTop) / height;
+      var move = (cm.getScrollInfo().height - cm.getScrollInfo().clientHeight) * ratio;
+      previewContent.scrollTop = this.scrollTop;
+      cm.scrollTo(0, move);
+    };
+
+    previewContent.onscroll = function () {
+      if (originScroll) {
+        originScroll = false;
+        return;
+      }
+
+      pScroll = true;
+      cmScroll = true;
+      var height = this.scrollHeight - this.clientHeight;
+      var ratio = parseFloat(this.scrollTop) / height;
+      var move = (cm.getScrollInfo().height - cm.getScrollInfo().clientHeight) * ratio;
+      previewScrollbar.scrollTop = this.scrollTop;
+      cm.scrollTo(0, move);
+    };
 
     if (!cm.renderPreviewFn) {
       cm.renderPreviewFn = function () {
-        preview.innerHTML = _this.markdown.render(_this.value());
+        var scrollHeight = 0;
+
+        if (previewContent.scrollHeight > previewContent.clientHeight) {
+          scrollHeight = previewContent.scrollHeight;
+        }
+
+        previewScrollbar.firstElementChild.style.height = "".concat(previewContent.clientHeight + scrollHeight, "px");
+        previewContent.innerHTML = _this.markdown.render(_this.value());
       };
     }
 
@@ -10762,10 +10817,8 @@
 
     if (isFullScreen) {
       addClass(preview, "smartmd__preview--full");
-      preview.style.height = "auto";
     } else {
       removeClass(preview, "smartmd__preview--full");
-      preview.style.height = this.options.height;
     }
 
     cm.refresh();
@@ -29402,36 +29455,20 @@
     var cm = editor.codemirror;
     var cmElement = cm.getWrapperElement();
     var preview = document.createElement("div");
-    var cScroll = false;
-    var pScroll = false;
-    preview.className = "smartmd__preview markdown-body";
-    cm.on("scroll", function (v) {
-      if (cScroll) {
-        cScroll = false;
-        return;
-      }
-
-      pScroll = true;
-      var height = v.getScrollInfo().height - v.getScrollInfo().clientHeight;
-      var ratio = parseFloat(v.getScrollInfo().top) / height;
-      preview.scrollTop = (preview.scrollHeight - preview.clientHeight) * ratio;
-    });
-
-    preview.onscroll = function () {
-      if (pScroll) {
-        pScroll = false;
-        return;
-      }
-
-      cScroll = true;
-      var height = preview.scrollHeight - preview.clientHeight;
-      var ratio = parseFloat(preview.scrollTop) / height;
-      var move = (cm.getScrollInfo().height - cm.getScrollInfo().clientHeight) * ratio;
-      cm.scrollTo(0, move);
-    };
-
+    var scrollbar = document.createElement("div");
+    var scrollbarChild = document.createElement("div");
+    var content = document.createElement("div");
+    preview.className = "smartmd__preview ";
+    scrollbar.className = "smartmd__preview__scrollbar";
+    content.className = "smartmd__preview__content markdown-body";
+    scrollbarChild.style.minWidth = "1px";
+    scrollbar.appendChild(scrollbarChild);
+    preview.appendChild(scrollbar);
+    preview.appendChild(content);
     cmElement.parentNode.append(preview);
     editor.gui.preview = preview;
+    editor.gui.previewScrollbar = scrollbar;
+    editor.gui.previewContent = content;
   }
 
   function buildTooltips(title, actionName) {
@@ -29845,31 +29882,24 @@
 
   function toTextArea() {
     var gui = this.gui;
-    var wrapper = gui.wrapper;
-    if (gui.alert) wrapper.removeChild(gui.alert);
-    if (gui.preview) wrapper.removeChild(gui.preview);
-    if (gui.render) wrapper.removeChild(gui.render);
-    if (gui.toolbar) wrapper.removeChild(gui.toolbar);
-    if (gui.statusbar) wrapper.removeChild(gui.statusbar);
+    var children = gui.wrapper.childNodes;
     this.codemirror.toTextArea();
+
+    for (var i = 0; i < children.length; i++) {
+      if (children[i].nodeName !== 'TEXTAREA') {
+        children[i].remove();
+      }
+    }
+  }
+
+  function parsePixes(pixes) {
+    return isNaN(pixes) ? pixes : "".concat(pixes, "px");
   }
 
   function resize(width, height) {
     var gui = this.gui;
-
-    if (width) {
-      width = isNaN(width) ? width : "".concat(width, "px");
-      gui.wrapper.style.width = width;
-    }
-
-    if (height) {
-      var toolbarHeight = gui.toolbar.offsetHeight;
-      var statusbarHeight = gui.statusbar.offsetHeight;
-      height = parseInt(height, 10);
-      gui.wrapper.style.height = "".concat(height, "px");
-      height = height - toolbarHeight - statusbarHeight;
-      this.codemirror.setSize(null, "".concat(height, "px"));
-    }
+    if (width) gui.wrapper.style.width = parsePixes(width);
+    if (height) gui.wrapper.style.height = parsePixes(height);
   }
 
   var ext = {

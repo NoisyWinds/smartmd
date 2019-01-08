@@ -38,7 +38,7 @@ function token(stream, state) {
       return t;
     }
   }
-  if (ch === ":" && stream.match(/^[^: \\]+:/)) {
+  if (ch === ":" && stream.match(/^[^: \\/?'"]+:/)) {
      return "emoji";
   }
   return getType(state);

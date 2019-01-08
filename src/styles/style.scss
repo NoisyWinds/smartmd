@@ -2,22 +2,53 @@
 @import "./highlight.scss";
 @import "./codemirror.scss";
 
+* {
+  box-sizing: border-box;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar {
+  background-color: transparent;
+  &:horizontal {
+    height: 8px;
+  }
+  &:vertical {
+    width: 8px
+  }
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background-color: #bbb;
+  transition: color .3s;
+
+  &:hover{
+    background-color: #999;
+  }
+}
+
 .smartmd {
   background: #fff;
   position: relative;
   box-sizing: border-box;
   overflow: hidden;
   font-family: inherit;
-  border-radius: 3px;
+
   &__toolbar {
-    position: relative;
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
     z-index: 5;
     opacity: 1;
     background: #fff;
     user-select: none;
-    padding: 0 10px;
+    padding: 0 5px;
     border-bottom: 1px solid #ddd;
-    top: 0;
+    height: 3em;
     &:after,
     &:before {
       display: block;
@@ -35,14 +66,11 @@
 
     &--full {
       width: 100%;
-      height: 50px;
       overflow-x: auto;
       overflow-y: hidden;
       white-space: nowrap;
       box-sizing: border-box;
       background: #fff;
-      border-bottom: 1px solid #ccc;
-      border-top: 1px solid #ccc;
       position: fixed;
       top: 0;
       left: 0;
@@ -67,6 +95,7 @@
       color: #2c3e50 !important;
       width: 2em;
       height: 2em;
+      font-size: 0.95em;
       margin: 0;
       border: 1px solid transparent;
       border-radius: 3px;
@@ -142,35 +171,22 @@
   }
 
   &__preview {
+    top: 3em;
+    bottom: 2.4em;
     position: absolute;
     right: 0;
-    top: 0;
-    padding: 20px;
     width: 100%;
-    height: 100%;
-    z-index: 7;
-    overflow: auto;
+    height: auto;
+    z-index: 1;
     display: none;
     box-sizing: border-box;
     background: #fff;
 
     &--active {
       width: 50%;
-      position: static;
       display: block;
       float: right;
-
-      &::after {
-        display: block;
-        content: "";
-        position: absolute;
-        width: 2px;
-        left: 50%;
-        height: 100%;
-        border-right: 1px solid #ddd;
-        z-index: 1;
-        top: 0
-      }
+      border-left: 1px solid #ddd;
     }
 
     &--full {
@@ -188,7 +204,22 @@
         left: 0;
       }
     }
-
+    &__scrollbar {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      outline: 0;
+      overflow-x: hidden;
+      overflow-y: scroll;
+    }
+    &__content {
+      height:100%;
+      margin-bottom: -35px;
+      margin-right: -35px;
+      padding-bottom: 35px;
+      overflow: scroll !important;
+    }
     p {
       margin-top: 0
     }
@@ -221,6 +252,7 @@
 
     &__container {
       max-width: 1200px;
+      padding: 4.75rem 3.75rem 4rem;
       width: 100%;
       height: 100%;
       transform: translateY(-30%);
@@ -229,27 +261,20 @@
       background: #fff;
       box-sizing: border-box;
       border: 1px solid rgba(0, 0, 0, .2);
-      border-radius: .3rem;
+      border-radius: 10px;
       position: relative;
       transition: .2s linear;
     }
     &__body {
-      padding: 3.75rem;
       height: 100%;
       overflow-y: auto;
       box-sizing: border-box;
-      &::-webkit-scrollbar-thumb {
-        background: #66d497;
-      }
-      &::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.2);
-      }
     }
     &__closeButton {
       position: fixed;
       right: 0;
       top: 0;
-      padding: 1.5rem 2.25rem;
+      padding: 1.45rem 2rem;
       cursor: pointer;
       opacity: 0.4;
       border: 0;
@@ -273,17 +298,20 @@
   }
 
   &__statusbar {
+    position: absolute;
+    z-index: 5;
     width: 100%;
+    left: 0;
+    bottom: -2px;
     box-sizing: border-box;
     border-top: 1px solid #ddd;
-    padding: 8px 10px;
+    padding: 6px 0;
     font-size: 12px;
     color: #959694;
     text-align: right;
     clear: both;
     background: #fff;
-    position: relative;
-    z-index: 5;
+    line-height: 2.4em;
 
     & span {
       display: inline-block;

@@ -6,30 +6,23 @@ import {autoSaveUpdate, clearAutoSaved, clearAutoSavedValue, startAutoSave} from
 
 function toTextArea() {
   let gui = this.gui;
-  let wrapper = gui.wrapper;
-  if (gui.alert) wrapper.removeChild(gui.alert);
-  if (gui.preview) wrapper.removeChild(gui.preview);
-  if (gui.render) wrapper.removeChild(gui.render);
-  if (gui.toolbar) wrapper.removeChild(gui.toolbar);
-  if (gui.statusbar) wrapper.removeChild(gui.statusbar);
+  let children = gui.wrapper.childNodes;
   this.codemirror.toTextArea();
+  for (let i = 0; i < children.length; i++) {
+    if (children[i].nodeName !== 'TEXTAREA') {
+      children[i].remove();
+    }
+  }
 }
 
+function parsePixes(pixes) {
+  return isNaN(pixes) ? pixes : `${pixes}px`;
+}
 
 function resize(width, height) {
   let gui = this.gui;
-  if (width) {
-    width = isNaN(width) ? width : `${width}px`;
-    gui.wrapper.style.width = width;
-  }
-  if (height) {
-    const toolbarHeight = gui.toolbar.offsetHeight;
-    const statusbarHeight = gui.statusbar.offsetHeight;
-    height = parseInt(height, 10);
-    gui.wrapper.style.height = `${height}px`;
-    height = height - toolbarHeight - statusbarHeight;
-    this.codemirror.setSize(null, `${height}px`)
-  }
+  if (width) gui.wrapper.style.width = parsePixes(width);
+  if (height) gui.wrapper.style.height = parsePixes(height);
 }
 
 
