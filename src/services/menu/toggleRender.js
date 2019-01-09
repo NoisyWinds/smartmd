@@ -27,7 +27,7 @@ export default function () {
       addClass(toolbar, "smartmd__toolbar--disabled");
     }
 
-    renderBody.innerHTML = this.markdown.render(this.value());
+    renderBody.innerHTML = this.markdownIt.render(this.value());
     render.style.display = "block";
     isRenderActive = true;
 

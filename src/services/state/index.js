@@ -1,7 +1,7 @@
-import Watcher from "../observer/Watcher";
-import {clearFixed, startFixedToolbar} from "../extend/fixedToolbar";
-import {clearAutoSaved, startAutoSave} from "../extend/autoSave";
-import {isObject} from "../utils";
+import Watcher from '../observer/Watcher';
+import {clearFixed, startFixedToolbar} from '../extend/fixedToolbar';
+import {clearAutoSaved, startAutoSave} from '../extend/autoSave';
+import {def, isObject} from '../utils';
 
 function isFixedToolbar(val) {
   val ? startFixedToolbar.apply(this) : clearFixed()
@@ -61,5 +61,5 @@ export default function (editor) {
     }
   }
 
-  return wClass;
+  def(editor, 'state', wClass)
 }

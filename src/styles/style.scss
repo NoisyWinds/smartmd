@@ -48,6 +48,9 @@
     user-select: none;
     padding: 0 5px;
     border-bottom: 1px solid #ddd;
+    white-space: nowrap;
+    box-sizing:content-box;
+    overflow-x: auto;
     height: 3em;
     &:after,
     &:before {
@@ -95,8 +98,8 @@
       color: #2c3e50 !important;
       width: 2em;
       height: 2em;
+      margin-left:1px;
       font-size: 0.95em;
-      margin: 0;
       border: 1px solid transparent;
       border-radius: 3px;
       cursor: pointer;
@@ -306,11 +309,12 @@
     box-sizing: border-box;
     border-top: 1px solid #ddd;
     padding: 6px 0;
-    font-size: 12px;
+    font-size:0.6em;
     color: #959694;
     text-align: right;
     clear: both;
     background: #fff;
+    white-space: nowrap;
     line-height: 2.4em;
 
     & span {
@@ -413,7 +417,7 @@
       background: #1abc9c;
       color: #fff;
       line-height: 15px;
-      font-size: 12px;
+      font-size: 0.6em;
       padding-right: 5px;
       border-radius: 20px;
       transition: .5s;
@@ -426,4 +430,9 @@
   }
 }
 
+@media screen and (max-width: 480px){
+   .smartmd{
+     font-size: 14px;
+   }
+}
 

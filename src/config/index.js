@@ -24,7 +24,7 @@ const insertTexts = {
 export default {
   isFullScreen: false,
   isPreviewActive: false,
-  statusbar: ['autoSave', 'lines', 'words', 'cursor', 'block'],
+  statusbar: ['block','autoSave', 'lines', 'words', 'cursor'],
   uploadsPath: "./upload",
   uploads: {
     type: ['jpeg', 'png', 'bmp', 'gif', 'jpg'],

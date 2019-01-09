@@ -1,4 +1,4 @@
-import {isObject} from "../services/utils";
+import {assign, isObject} from "../services/utils";
 
 function wordCount(data) {
   let pattern = /[a-zA-Z0-9_\u0392-\u03c9\u0410-\u04F9]+|[\u4E00-\u9FFF\u3400-\u4dbf\uf900-\ufaff\u3040-\u309f\uac00-\ud7af]+/g;
@@ -86,6 +86,9 @@ export default function (editor) {
   }
 
   cmElement.parentNode.append(statusbar);
-  editor.gui.statusbar = statusbar;
-  editor.gui.statusbarElements = statusbarElements;
+
+  assign(editor.gui, {
+    statusbar,
+    statusbarElements
+  })
 }

@@ -1,21 +1,26 @@
+import {assign} from "../services/utils";
+
 export default function (editor) {
   const cm = editor.codemirror;
   const cmElement = cm.getWrapperElement();
   const preview = document.createElement("div");
-  const scrollbar = document.createElement("div");
+  const previewScrollbar = document.createElement("div");
   const scrollbarChild = document.createElement("div");
-  const content = document.createElement("div");
+  const previewContent = document.createElement("div");
 
   preview.className = "smartmd__preview ";
-  scrollbar.className = "smartmd__preview__scrollbar";
-  content.className = "smartmd__preview__content markdown-body";
+  previewScrollbar.className = "smartmd__preview__scrollbar";
+  previewContent.className = "smartmd__preview__content markdown-body";
   scrollbarChild.style.minWidth = "1px";
 
-  scrollbar.appendChild(scrollbarChild);
-  preview.appendChild(scrollbar);
-  preview.appendChild(content);
+  previewScrollbar.appendChild(scrollbarChild);
+  preview.appendChild(previewScrollbar);
+  preview.appendChild(previewContent);
   cmElement.parentNode.append(preview);
-  editor.gui.preview = preview;
-  editor.gui.previewScrollbar = scrollbar;
-  editor.gui.previewContent = content;
+
+  assign(editor.gui,{
+    preview,
+    previewScrollbar,
+    previewContent
+  })
 }

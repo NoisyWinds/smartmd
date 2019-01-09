@@ -9915,8 +9915,8 @@
    */
 
   function getType(state) {
-    if (state.math) return "math";
-    if (state.emoji) return "emoji";
+    if (state.math) return 'math';
+    if (state.emoji) return 'emoji';
     return null;
   }
 
@@ -9935,9 +9935,9 @@
   function token(stream, state) {
     var ch = stream.next();
 
-    if (ch === "$") {
-      stream.eatWhile('$');
+    if (ch === '$') {
       var count = stream.current().length;
+      stream.eatWhile('$');
 
       if (state.math === 0) {
         state.math = count;
@@ -9950,15 +9950,15 @@
       }
     }
 
-    if (ch === ":" && stream.match(/^[^: \\/?'"]+:/)) {
-      return "emoji";
+    if (ch === ':' && stream.match(/^[^: \\/?'"]+:/)) {
+      return 'emoji';
     }
 
     return getType(state);
   }
 
-  codemirror.defineMode("smartmd", function (config) {
-    return codemirror.overlayMode(codemirror.getMode(config, "markdown"), {
+  codemirror.defineMode('smartmd', function (config) {
+    return codemirror.overlayMode(codemirror.getMode(config, 'markdown'), {
       startState: startState,
       token: token,
       copyState: copyState
@@ -10693,7 +10693,7 @@
     var cm = this.codemirror;
     var toolbar = this.gui.toolbar;
     var preview = this.gui.preview;
-    cm.setOption("fullScreen", !cm.getOption("fullScreen"));
+    cm.setOption('fullScreen', !cm.getOption('fullScreen'));
     toggleClass(document.body, "body-hidden");
 
     if (toolbar) {
@@ -10720,7 +10720,7 @@
     var previewContent = this.gui.previewContent;
     addClass(preview, "smartmd__preview--active");
     addClass(cmElement, "CodeMirror-sided");
-    previewContent.innerHTML = this.markdown.render(this.value());
+    previewContent.innerHTML = this.markdownIt.render(this.value());
     cm.on('update', cm.renderPreviewFn);
   }
 
@@ -10742,9 +10742,10 @@
     var previewScrollbar = this.gui.previewScrollbar;
     var previewContent = this.gui.previewContent;
     var icon = false;
-    var cmScroll = false;
-    var pScroll = false;
-    var originScroll = false;
+    var cmScroll,
+        pScroll,
+        originScroll = false; // codeMirror editor scroll
+
     cm.on("scroll", function (v) {
       if (cmScroll) {
         cmScroll = false;
@@ -10758,7 +10759,7 @@
       var top = (previewScrollbar.scrollHeight - previewScrollbar.clientHeight) * ratio;
       previewScrollbar.scrollTop = top;
       previewContent.scrollTop = top;
-    });
+    }); // preview scrollbar scroll
 
     previewScrollbar.onscroll = function () {
       if (pScroll) {
@@ -10799,7 +10800,7 @@
         }
 
         previewScrollbar.firstElementChild.style.height = "".concat(previewContent.clientHeight + scrollHeight, "px");
-        previewContent.innerHTML = _this.markdown.render(_this.value());
+        previewContent.innerHTML = _this.markdownIt.render(_this.value());
       };
     }
 
@@ -10851,7 +10852,7 @@
         addClass(toolbar, "smartmd__toolbar--disabled");
       }
 
-      renderBody.innerHTML = this.markdown.render(this.value());
+      renderBody.innerHTML = this.markdownIt.render(this.value());
       render.style.display = "block";
       isRenderActive = true; // set renderBody enter animation
 
@@ -13478,7 +13479,7 @@
   var defaults = {
     isFullScreen: false,
     isPreviewActive: false,
-    statusbar: ['autoSave', 'lines', 'words', 'cursor', 'block'],
+    statusbar: ['block', 'autoSave', 'lines', 'words', 'cursor'],
     uploadsPath: "./upload",
     uploads: {
       type: ['jpeg', 'png', 'bmp', 'gif', 'jpg'],
@@ -29419,7 +29420,7 @@
       plugin: MermaidPlugin,
       options: {
         throwOnError: true,
-        errorColor: "#cc0000"
+        errorColor: '#cc0000'
       }
     },
     katex: {
@@ -29442,9 +29443,9 @@
 
     var md = _markdownIt_8_4_2_markdownIt(markdownOptions.options);
     markdownOptions.plugins.forEach(function (item) {
-      if (typeof item === "function") {
-        md.use(item);
-      } else if (typeof item === "string" && item in plugins) {
+      if (_typeof(item) === 'object') {
+        md.use(item.plugin, item.options);
+      } else if (typeof item === 'string' && item in plugins) {
         md.use(plugins[item].plugin, plugins[item].options || {});
       }
     });
@@ -29455,25 +29456,27 @@
     var cm = editor.codemirror;
     var cmElement = cm.getWrapperElement();
     var preview = document.createElement("div");
-    var scrollbar = document.createElement("div");
+    var previewScrollbar = document.createElement("div");
     var scrollbarChild = document.createElement("div");
-    var content = document.createElement("div");
+    var previewContent = document.createElement("div");
     preview.className = "smartmd__preview ";
-    scrollbar.className = "smartmd__preview__scrollbar";
-    content.className = "smartmd__preview__content markdown-body";
+    previewScrollbar.className = "smartmd__preview__scrollbar";
+    previewContent.className = "smartmd__preview__content markdown-body";
     scrollbarChild.style.minWidth = "1px";
-    scrollbar.appendChild(scrollbarChild);
-    preview.appendChild(scrollbar);
-    preview.appendChild(content);
+    previewScrollbar.appendChild(scrollbarChild);
+    preview.appendChild(previewScrollbar);
+    preview.appendChild(previewContent);
     cmElement.parentNode.append(preview);
-    editor.gui.preview = preview;
-    editor.gui.previewScrollbar = scrollbar;
-    editor.gui.previewContent = content;
+    assign(editor.gui, {
+      preview: preview,
+      previewScrollbar: previewScrollbar,
+      previewContent: previewContent
+    });
   }
 
   function buildTooltips(title, actionName) {
-    var tooltips = title;
     var action = menuList[actionName];
+    var tooltips = title;
 
     if (typeof action === "function") {
       if (shortcuts[actionName]) {
@@ -29521,28 +29524,28 @@
   }
 
   function buildToolbar (editor) {
-    var bar = document.createElement("div");
+    var toolbar = document.createElement("div");
     var toolbarElements = [];
     var cm = editor.codemirror;
     var options = editor.options;
     var cmElement = cm.getWrapperElement();
     var toolbarConfig = options.toolbarConfig; // set toolbar option
 
-    var toolbar = options.toolbar;
+    var toolbarOptions = options.toolbar;
     var hideToolbar = options.hideToolbar;
-    bar.className = "smartmd__toolbar";
+    toolbar.className = "smartmd__toolbar";
 
     function build(name) {
       var icon = buildItem(editor, name);
       if (!icon) return;
       if (inArray(name, hideToolbar)) icon.style.display = "none";
       toolbarElements[name] = icon;
-      bar.appendChild(icon);
+      toolbar.appendChild(icon);
     }
 
-    if (Array.isArray(toolbar)) {
-      for (var i = 0; i < toolbar.length; i++) {
-        var name = toolbar[i];
+    if (Array.isArray(toolbarOptions)) {
+      for (var i = 0; i < toolbarOptions.length; i++) {
+        var name = toolbarOptions[i];
         if (name === "|") name = "split-line";
         build(name);
       }
@@ -29554,8 +29557,8 @@
 
     cm.on("cursorActivity", function () {
       var stat = getState(cm);
-      Object.keys(bar).forEach(function (key) {
-        var item = bar[key];
+      Object.keys(toolbar).forEach(function (key) {
+        var item = toolbar[key];
 
         if (stat[key]) {
           addClass(item, "active");
@@ -29564,9 +29567,11 @@
         }
       });
     });
-    cmElement.parentNode.insertBefore(bar, cmElement);
-    editor.gui.toolbar = bar;
-    editor.gui.toolbarElements = toolbarElements;
+    cmElement.parentNode.insertBefore(toolbar, cmElement);
+    assign(editor.gui, {
+      toolbar: toolbar,
+      toolbarElements: toolbarElements
+    });
   }
 
   function buildRender (editor) {
@@ -29574,13 +29579,13 @@
     var render = document.createElement("div");
     var container = document.createElement("div");
     var closeButton = document.createElement("button");
-    var body = document.createElement("div");
+    var renderBody = document.createElement("div");
     render.className = "smartmd__render";
     container.className = "smartmd__render__container";
     closeButton.className = "smartmd__render__closeButton fa fa-close";
-    body.className = "markdown-body smartmd__render__body";
+    renderBody.className = "markdown-body smartmd__render__body";
     container.appendChild(closeButton);
-    container.appendChild(body);
+    container.appendChild(renderBody);
     render.appendChild(container);
     cmElement.parentNode.append(render); // closeButton click function
 
@@ -29588,8 +29593,10 @@
       editor.toggleRender();
     };
 
-    editor.gui.render = render;
-    editor.gui.renderBody = body;
+    assign(editor.gui, {
+      render: render,
+      renderBody: renderBody
+    });
   }
 
   function wordCount(data) {
@@ -29678,8 +29685,10 @@
     }
 
     cmElement.parentNode.append(statusbar);
-    editor.gui.statusbar = statusbar;
-    editor.gui.statusbarElements = statusbarElements;
+    assign(editor.gui, {
+      statusbar: statusbar,
+      statusbarElements: statusbarElements
+    });
   }
 
   function buildAlert (editor) {
@@ -29695,12 +29704,12 @@
     var wrapper = document.createElement("div");
     var cm = editor.codemirror;
     var cmElement = cm.getWrapperElement();
-    editor.gui = {};
     wrapper.className = "smartmd";
     cmElement.parentNode.replaceChild(wrapper, cmElement);
     options.el.parentNode.replaceChild(wrapper, options.el);
     wrapper.appendChild(cmElement);
     wrapper.appendChild(options.el);
+    editor.gui = {};
     editor.gui.wrapper = wrapper;
     buildPreview(editor);
     buildAlert(editor);
@@ -29902,6 +29911,10 @@
     if (height) gui.wrapper.style.height = parsePixes(height);
   }
 
+  function markdown$1(text) {
+    return this.markdownIt.render(text);
+  }
+
   var ext = {
     toTextArea: toTextArea,
     alert: alert,
@@ -29910,9 +29923,10 @@
     clearAutoSaved: clearAutoSaved,
     clearAutoSavedValue: clearAutoSavedValue,
     startAutoSave: startAutoSave,
-    resize: resize
+    resize: resize,
+    markdown: markdown$1
   };
-  function initExtend (editor) {
+  function initExtends (editor) {
     for (var name in ext) {
       if (ext.hasOwnProperty(name)) {
         def(editor, name, ext[name]);
@@ -30217,7 +30231,7 @@
       }
     }
 
-    return wClass;
+    def(editor, 'state', wClass);
   }
 
   var Smartmd =
@@ -30236,15 +30250,15 @@
 
       new Observer(opt);
       this.options = opt;
-      this.utils = utils; // toolbar list active function
+      this.utils = utils;
+      this.markdownIt = MarkdownIt$1(this);
+      this.codemirror = CodeMirror$1(this); // toolbar list active function
 
       initMenu(this); // Smartmd Class extend function
 
-      initExtend(this);
-      this.markdown = MarkdownIt$1(this);
-      this.codemirror = CodeMirror$1(this);
+      initExtends(this);
       initGui(this);
-      this.watchers = initState(this);
+      initState(this);
     }
 
     _createClass(Smartmd, [{

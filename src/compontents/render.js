@@ -1,17 +1,19 @@
+import {assign} from "../services/utils";
+
 export default function (editor) {
-  let cmElement = editor.codemirror.getWrapperElement();
-  let render = document.createElement("div");
-  let container = document.createElement("div");
-  let closeButton = document.createElement("button");
-  let body = document.createElement("div");
+  const cmElement = editor.codemirror.getWrapperElement();
+  const render = document.createElement("div");
+  const container = document.createElement("div");
+  const closeButton = document.createElement("button");
+  const renderBody = document.createElement("div");
 
   render.className = "smartmd__render";
   container.className = "smartmd__render__container";
   closeButton.className = "smartmd__render__closeButton fa fa-close";
-  body.className = "markdown-body smartmd__render__body";
+  renderBody.className = "markdown-body smartmd__render__body";
 
   container.appendChild(closeButton);
-  container.appendChild(body);
+  container.appendChild(renderBody);
   render.appendChild(container);
   cmElement.parentNode.append(render);
 
@@ -20,6 +22,8 @@ export default function (editor) {
     editor.toggleRender();
   };
 
-  editor.gui.render = render;
-  editor.gui.renderBody = body;
+  assign(editor.gui, {
+    render,
+    renderBody
+  })
 }

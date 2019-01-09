@@ -11,7 +11,7 @@ const plugins = {
     plugin: MarkdownItMermiad,
     options: {
       throwOnError: true,
-      errorColor: "#cc0000"
+      errorColor: '#cc0000'
     }
   },
   katex: {
@@ -35,9 +35,9 @@ export default function (editor) {
 
   const md = MarkdownIt(markdownOptions.options);
   markdownOptions.plugins.forEach((item) => {
-    if (typeof item === "function") {
-      md.use(item)
-    } else if (typeof item === "string" && item in plugins) {
+    if (typeof item === 'object') {
+      md.use(item.plugin, item.options)
+    } else if (typeof item === 'string' && item in plugins) {
       md.use(plugins[item].plugin, plugins[item].options || {})
     }
   });

@@ -1,11 +1,11 @@
 import {menuList} from "../services/menu";
-import {addClass, fixShortcut, inArray, isUrl, removeClass} from "../services/utils";
+import {addClass, assign, fixShortcut, inArray, isUrl, removeClass} from "../services/utils";
 import shortcuts from "../config/shortcuts";
 import getState from "../services/codemirror/getState";
 
 function buildTooltips(title, actionName) {
+  const action = menuList[actionName];
   let tooltips = title;
-  let action = menuList[actionName];
 
   if (typeof action === "function") {
     if (shortcuts[actionName]) {
@@ -16,7 +16,7 @@ function buildTooltips(title, actionName) {
 }
 
 function buildIcon(options) {
-  let icon = document.createElement("a");
+  const icon = document.createElement("a");
 
   if (options.title) icon.title = buildTooltips(options.title, options.action);
   icon.tabIndex = -1;
@@ -26,9 +26,9 @@ function buildIcon(options) {
 }
 
 function buildItem(editor, name) {
-  let options = editor.options;
-  let toolbarConfig = options.toolbarConfig;
-  let item = toolbarConfig[name];
+  const options = editor.options;
+  const toolbarConfig = options.toolbarConfig;
+  const item = toolbarConfig[name];
   if (!item) return false;
 
   if (/split-line-[0-9]+/.test(name)) {
@@ -53,29 +53,29 @@ function buildItem(editor, name) {
 }
 
 export default function (editor) {
-  let bar = document.createElement("div");
-  let toolbarElements = [];
-  let cm = editor.codemirror;
-  let options = editor.options;
-  let cmElement = cm.getWrapperElement();
-  let toolbarConfig = options.toolbarConfig;
+  const toolbar = document.createElement("div");
+  const toolbarElements = [];
+  const cm = editor.codemirror;
+  const options = editor.options;
+  const cmElement = cm.getWrapperElement();
+  const toolbarConfig = options.toolbarConfig;
   // set toolbar option
-  let toolbar = options.toolbar;
-  let hideToolbar = options.hideToolbar;
+  const toolbarOptions = options.toolbar;
+  const hideToolbar = options.hideToolbar;
 
-  bar.className = "smartmd__toolbar";
+  toolbar.className = "smartmd__toolbar";
 
   function build(name) {
     let icon = buildItem(editor, name);
     if (!icon) return;
     if (inArray(name, hideToolbar)) icon.style.display = "none";
     toolbarElements[name] = icon;
-    bar.appendChild(icon);
+    toolbar.appendChild(icon);
   }
 
-  if (Array.isArray(toolbar)) {
-    for (let i = 0; i < toolbar.length; i++) {
-      let name = toolbar[i];
+  if (Array.isArray(toolbarOptions)) {
+    for (let i = 0; i < toolbarOptions.length; i++) {
+      let name = toolbarOptions[i];
       if (name === "|") name = "split-line";
       build(name);
     }
@@ -87,9 +87,9 @@ export default function (editor) {
 
 
   cm.on("cursorActivity", () => {
-    let stat = getState(cm);
-    Object.keys(bar).forEach((key) => {
-      let item = bar[key];
+    const stat = getState(cm);
+    Object.keys(toolbar).forEach((key) => {
+      const item = toolbar[key];
       if (stat[key]) {
         addClass(item, "active");
       } else {
@@ -98,7 +98,10 @@ export default function (editor) {
     })
   });
 
-  cmElement.parentNode.insertBefore(bar, cmElement);
-  editor.gui.toolbar = bar;
-  editor.gui.toolbarElements = toolbarElements;
+  cmElement.parentNode.insertBefore(toolbar, cmElement);
+
+  assign(editor.gui, {
+    toolbar,
+    toolbarElements
+  })
 }

@@ -1,10 +1,10 @@
 export default function (editor) {
-  let alert = document.createElement("div");
-  let cmElement = editor.codemirror.getWrapperElement();
+  const alert = document.createElement("div");
+  const cmElement = editor.codemirror.getWrapperElement();
 
   alert.className = "smartmd__alert";
   cmElement.parentNode.append(alert);
 
-  editor.gui.alert = alert;
+  editor.gui.alert = alert
 }
 

@@ -6,8 +6,8 @@ import "codemirror/addon/mode/overlay"
  */
 
 function getType(state) {
-  if (state.math) return "math";
-  if (state.emoji) return "emoji";
+  if (state.math) return 'math';
+  if (state.emoji) return 'emoji';
   return null;
 }
 
@@ -25,9 +25,9 @@ function copyState(s) {
 
 function token(stream, state) {
   let ch = stream.next();
-  if (ch === "$") {
+  if (ch === '$') {
+    const count = stream.current().length;
     stream.eatWhile('$');
-    let count = stream.current().length;
     if (state.math === 0) {
       state.math = count;
       return getType(state);
@@ -38,14 +38,14 @@ function token(stream, state) {
       return t;
     }
   }
-  if (ch === ":" && stream.match(/^[^: \\/?'"]+:/)) {
-     return "emoji";
+  if (ch === ':' && stream.match(/^[^: \\/?'"]+:/)) {
+    return 'emoji'
   }
   return getType(state);
 }
 
-CodeMirror.defineMode("smartmd", function (config) {
-  return CodeMirror.overlayMode(CodeMirror.getMode(config, "markdown"), {
+CodeMirror.defineMode('smartmd', function (config) {
+  return CodeMirror.overlayMode(CodeMirror.getMode(config, 'markdown'), {
     startState,
     token,
     copyState

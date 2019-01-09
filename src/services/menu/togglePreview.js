@@ -11,7 +11,7 @@ function startPreview() {
 
   addClass(preview, "smartmd__preview--active");
   addClass(cmElement, "CodeMirror-sided");
-  previewContent.innerHTML = this.markdown.render(this.value());
+  previewContent.innerHTML = this.markdownIt.render(this.value());
   cm.on('update', cm.renderPreviewFn);
 }
 
@@ -32,24 +32,24 @@ export default function togglePreview() {
   const previewScrollbar = this.gui.previewScrollbar;
   const previewContent = this.gui.previewContent;
   let icon = false;
-  let cmScroll = false;
-  let pScroll = false;
-  let originScroll = false;
+  let cmScroll, pScroll, originScroll = false;
 
-  cm.on("scroll", (v) => {
+  // codeMirror editor scroll
+  cm.on("scroll", function (v) {
     if (cmScroll) {
       cmScroll = false;
       return;
     }
     pScroll = true;
     originScroll = true;
-    let height = v.getScrollInfo().height - v.getScrollInfo().clientHeight;
-    let ratio = parseFloat(v.getScrollInfo().top) / height;
-    let top = (previewScrollbar.scrollHeight - previewScrollbar.clientHeight) * ratio;
+    const height = v.getScrollInfo().height - v.getScrollInfo().clientHeight;
+    const ratio = parseFloat(v.getScrollInfo().top) / height;
+    const top = (previewScrollbar.scrollHeight - previewScrollbar.clientHeight) * ratio;
     previewScrollbar.scrollTop = top;
     previewContent.scrollTop = top;
   });
 
+  // preview scrollbar scroll
   previewScrollbar.onscroll = function () {
     if (pScroll) {
       pScroll = false;
@@ -57,9 +57,9 @@ export default function togglePreview() {
     }
     cmScroll = true;
     originScroll = true;
-    let height = this.scrollHeight - this.clientHeight;
-    let ratio = parseFloat(this.scrollTop) / height;
-    let move = (cm.getScrollInfo().height - cm.getScrollInfo().clientHeight) * ratio;
+    const height = this.scrollHeight - this.clientHeight;
+    const ratio = parseFloat(this.scrollTop) / height;
+    const move = (cm.getScrollInfo().height - cm.getScrollInfo().clientHeight) * ratio;
     previewContent.scrollTop = this.scrollTop;
     cm.scrollTo(0, move);
   };
@@ -71,9 +71,9 @@ export default function togglePreview() {
     }
     pScroll = true;
     cmScroll = true;
-    let height = this.scrollHeight - this.clientHeight;
-    let ratio = parseFloat(this.scrollTop) / height;
-    let move = (cm.getScrollInfo().height - cm.getScrollInfo().clientHeight) * ratio;
+    const height = this.scrollHeight - this.clientHeight;
+    const ratio = parseFloat(this.scrollTop) / height;
+    const move = (cm.getScrollInfo().height - cm.getScrollInfo().clientHeight) * ratio;
     previewScrollbar.scrollTop = this.scrollTop;
     cm.scrollTo(0, move);
   };
@@ -85,7 +85,7 @@ export default function togglePreview() {
         scrollHeight = previewContent.scrollHeight;
       }
       previewScrollbar.firstElementChild.style.height = `${previewContent.clientHeight + scrollHeight}px`;
-      previewContent.innerHTML = this.markdown.render(this.value());
+      previewContent.innerHTML = this.markdownIt.render(this.value());
     };
   }
 

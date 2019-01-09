@@ -4,7 +4,7 @@ import MarkdownIt from "./services/markdown-it"
 import initGui from "./compontents/main"
 import * as utils from "./services/utils"
 import initMenu from "./services/menu"
-import initExtend from "./services/extend"
+import initExtends from "./services/extend"
 import Observer from "./services/observer";
 import initState from "./services/state"
 
@@ -22,16 +22,16 @@ export class Smartmd {
     new Observer(opt);
     this.options = opt;
     this.utils = utils;
+    this.markdownIt = MarkdownIt(this);
+    this.codemirror = CodeMirror(this);
 
     // toolbar list active function
     initMenu(this);
     // Smartmd Class extend function
-    initExtend(this);
+    initExtends(this);
 
-    this.markdown = MarkdownIt(this);
-    this.codemirror = CodeMirror(this);
     initGui(this);
-    this.watchers = initState(this);
+    initState(this);
   }
 
   value(text) {
