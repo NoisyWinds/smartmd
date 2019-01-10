@@ -133,3 +133,13 @@ export function remove(arr, item) {
   return false;
 }
 
+export function getElement(name) {
+  const mId = name.match(/^#([\w]+)/);
+  const mClass = name.match(/^\.([\w]+)/);
+  if (mId) {
+    return document.getElementById(mId[1]);
+  } else if (mClass) {
+    return document.getElementsByClassName(mClass[1])
+  }
+  return false;
+}

@@ -14,11 +14,15 @@ export class Smartmd {
     let opt = utils.extend({}, defaults, options);
 
     // find textArea element
-    if (!opt.el) {
-      // no element was found
+    if (opt.el) {
+      opt.el = utils.getElement(opt.el);
+      console.log(opt.el);
+    } else {
+      // no element found
       console.error("Smartmd: Error. No element was found.");
       return
     }
+
     new Observer(opt);
     this.options = opt;
     this.utils = utils;

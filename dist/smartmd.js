@@ -10666,6 +10666,18 @@
 
     return false;
   }
+  function getElement(name) {
+    var mId = name.match(/^#([\w]+)/);
+    var mClass = name.match(/^\.([\w]+)/);
+
+    if (mId) {
+      return document.getElementById(mId[1]);
+    } else if (mClass) {
+      return document.getElementsByClassName(mClass[1]);
+    }
+
+    return false;
+  }
 
   var utils = /*#__PURE__*/Object.freeze({
     assign: assign,
@@ -10685,7 +10697,8 @@
     isLocalStorage: isLocalStorage,
     def: def,
     isObject: isObject,
-    remove: remove
+    remove: remove,
+    getElement: getElement
   });
 
   var isFullScreen = false;
@@ -10717,11 +10730,12 @@
     var cm = this.codemirror;
     var cmElement = cm.getWrapperElement();
     var preview = this.gui.preview;
-    var previewContent = this.gui.previewContent;
+    var previewBody = this.gui.previewBody;
     addClass(preview, "smartmd__preview--active");
     addClass(cmElement, "CodeMirror-sided");
-    previewContent.innerHTML = this.markdownIt.render(this.value());
-    cm.on('update', cm.renderPreviewFn);
+    previewBody.innerHTML = this.markdownIt.render(this.value());
+    cm.on('change', cm.renderPreviewFn);
+    cm.on('update', cm.updateScrollbar);
   }
 
   function removePreview() {
@@ -10730,7 +10744,8 @@
     var preview = this.gui.preview;
     removeClass(preview, "smartmd__preview--active");
     removeClass(cmElement, "CodeMirror-sided");
-    cm.off('update', cm.renderPreviewFn);
+    cm.off('change', cm.renderPreviewFn);
+    cm.off('update', cm.updateScrollbar);
   }
 
   function togglePreview() {
@@ -10741,6 +10756,7 @@
     var preview = this.gui.preview;
     var previewScrollbar = this.gui.previewScrollbar;
     var previewContent = this.gui.previewContent;
+    var previewBody = this.gui.previewBody;
     var icon = false;
     var cmScroll,
         pScroll,
@@ -10793,14 +10809,20 @@
 
     if (!cm.renderPreviewFn) {
       cm.renderPreviewFn = function () {
-        var scrollHeight = 0;
+        previewBody.innerHTML = _this.markdownIt.render(_this.value());
+      };
+    }
 
-        if (previewContent.scrollHeight > previewContent.clientHeight) {
-          scrollHeight = previewContent.scrollHeight;
+    if (!cm.updateScrollbar) {
+      cm.updateScrollbar = function () {
+        var scrollHeight = previewContent.scrollHeight - 35;
+        var offsetHeight = previewContent.offsetHeight - 35;
+
+        if (scrollHeight <= offsetHeight) {
+          scrollHeight = offsetHeight;
         }
 
-        previewScrollbar.firstElementChild.style.height = "".concat(previewContent.clientHeight + scrollHeight, "px");
-        previewContent.innerHTML = _this.markdownIt.render(_this.value());
+        previewScrollbar.firstElementChild.style.height = "".concat(scrollHeight, "px");
       };
     }
 
@@ -29459,17 +29481,21 @@
     var previewScrollbar = document.createElement("div");
     var scrollbarChild = document.createElement("div");
     var previewContent = document.createElement("div");
+    var previewBody = document.createElement("div");
     preview.className = "smartmd__preview ";
     previewScrollbar.className = "smartmd__preview__scrollbar";
-    previewContent.className = "smartmd__preview__content markdown-body";
+    previewContent.className = "smartmd__preview__content";
+    previewBody.className = "markdown-body";
     scrollbarChild.style.minWidth = "1px";
     previewScrollbar.appendChild(scrollbarChild);
     preview.appendChild(previewScrollbar);
+    previewContent.appendChild(previewBody);
     preview.appendChild(previewContent);
     cmElement.parentNode.append(preview);
     assign(editor.gui, {
       preview: preview,
       previewScrollbar: previewScrollbar,
+      previewBody: previewBody,
       previewContent: previewContent
     });
   }
@@ -30242,8 +30268,11 @@
 
       var opt = extend({}, defaults, options); // find textArea element
 
-      if (!opt.el) {
-        // no element was found
+      if (opt.el) {
+        opt.el = getElement(opt.el);
+        console.log(opt.el);
+      } else {
+        // no element found
         console.error("Smartmd: Error. No element was found.");
         return;
       }

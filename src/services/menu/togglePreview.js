@@ -7,12 +7,13 @@ function startPreview() {
   const cm = this.codemirror;
   const cmElement = cm.getWrapperElement();
   const preview = this.gui.preview;
-  const previewContent = this.gui.previewContent;
+  const previewBody = this.gui.previewBody;
 
   addClass(preview, "smartmd__preview--active");
   addClass(cmElement, "CodeMirror-sided");
-  previewContent.innerHTML = this.markdownIt.render(this.value());
-  cm.on('update', cm.renderPreviewFn);
+  previewBody.innerHTML = this.markdownIt.render(this.value());
+  cm.on('change', cm.renderPreviewFn);
+  cm.on('update', cm.updateScrollbar);
 }
 
 function removePreview() {
@@ -22,7 +23,8 @@ function removePreview() {
 
   removeClass(preview, "smartmd__preview--active");
   removeClass(cmElement, "CodeMirror-sided");
-  cm.off('update', cm.renderPreviewFn);
+  cm.off('change', cm.renderPreviewFn);
+  cm.off('update', cm.updateScrollbar);
 }
 
 export default function togglePreview() {
@@ -31,6 +33,7 @@ export default function togglePreview() {
   const preview = this.gui.preview;
   const previewScrollbar = this.gui.previewScrollbar;
   const previewContent = this.gui.previewContent;
+  const previewBody = this.gui.previewBody;
   let icon = false;
   let cmScroll, pScroll, originScroll = false;
 
@@ -80,13 +83,18 @@ export default function togglePreview() {
 
   if (!cm.renderPreviewFn) {
     cm.renderPreviewFn = () => {
-      let scrollHeight = 0;
-      if (previewContent.scrollHeight > previewContent.clientHeight) {
-        scrollHeight = previewContent.scrollHeight;
-      }
-      previewScrollbar.firstElementChild.style.height = `${previewContent.clientHeight + scrollHeight}px`;
-      previewContent.innerHTML = this.markdownIt.render(this.value());
+      previewBody.innerHTML = this.markdownIt.render(this.value());
     };
+  }
+  if (!cm.updateScrollbar) {
+    cm.updateScrollbar = () => {
+      let scrollHeight = previewContent.scrollHeight - 35;
+      const offsetHeight = previewContent.offsetHeight - 35;
+      if (scrollHeight <= offsetHeight) {
+        scrollHeight = offsetHeight
+      }
+      previewScrollbar.firstElementChild.style.height = `${scrollHeight}px`;
+    }
   }
 
   if (toolbar) icon = this.gui.toolbarElements.preview;
