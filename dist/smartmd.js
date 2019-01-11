@@ -26732,6 +26732,16 @@
     decode: decode$2
   };
 
+  var punycode$1 = /*#__PURE__*/Object.freeze({
+    decode: decode$2,
+    encode: encode$2,
+    toUnicode: toUnicode,
+    toASCII: toASCII,
+    version: version,
+    ucs2: ucs2,
+    default: punycode
+  });
+
   // markdown-it default options
 
 
@@ -26911,6 +26921,8 @@
     }
   };
 
+  var punycode$2 = getCjsExportFromNamespace(punycode$1);
+
   var config = {
     'default': _default,
     zero: zero,
@@ -26953,7 +26965,7 @@
       //
       if (!parsed.protocol || RECODE_HOSTNAME_FOR.indexOf(parsed.protocol) >= 0) {
         try {
-          parsed.hostname = punycode.toASCII(parsed.hostname);
+          parsed.hostname = punycode$2.toASCII(parsed.hostname);
         } catch (er) { /**/ }
       }
     }
@@ -26973,7 +26985,7 @@
       //
       if (!parsed.protocol || RECODE_HOSTNAME_FOR.indexOf(parsed.protocol) >= 0) {
         try {
-          parsed.hostname = punycode.toUnicode(parsed.hostname);
+          parsed.hostname = punycode$2.toUnicode(parsed.hostname);
         } catch (er) { /**/ }
       }
     }

@@ -1,6 +1,6 @@
 /*!
  * Smartmd.js v1.0.0
- * (c) 2018-2018 NoisyWinds
+ * (c) 2018-2019 NoisyWinds
  * Released under the MIT License.
  */
 function _typeof(obj) {
@@ -37,44 +37,6 @@ function _createClass(Constructor, protoProps, staticProps) {
   if (protoProps) _defineProperties(Constructor.prototype, protoProps);
   if (staticProps) _defineProperties(Constructor, staticProps);
   return Constructor;
-}
-
-function _slicedToArray(arr, i) {
-  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();
-}
-
-function _arrayWithHoles(arr) {
-  if (Array.isArray(arr)) return arr;
-}
-
-function _iterableToArrayLimit(arr, i) {
-  var _arr = [];
-  var _n = true;
-  var _d = false;
-  var _e = undefined;
-
-  try {
-    for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
-      _arr.push(_s.value);
-
-      if (i && _arr.length === i) break;
-    }
-  } catch (err) {
-    _d = true;
-    _e = err;
-  } finally {
-    try {
-      if (!_n && _i["return"] != null) _i["return"]();
-    } finally {
-      if (_d) throw _e;
-    }
-  }
-
-  return _arr;
-}
-
-function _nonIterableRest() {
-  throw new TypeError("Invalid attempt to destructure non-iterable instance");
 }
 
 var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
@@ -3836,7 +3798,7 @@ var codemirror = createCommonjsModule(function (module, exports) {
       viewChanged: false,      // Flag that indicates that lines might need to be redrawn
       startHeight: cm.doc.height, // Used to detect need to update scrollbar
       forceUpdate: false,      // Used to force a redraw
-      updateInput: null,       // Whether to reset the input textarea
+      updateInput: 0,       // Whether to reset the input textarea
       typing: false,           // Whether this reset should be careful to leave existing text (for compositing)
       changeObjs: null,        // Accumulated changes, for firing change events
       cursorActivityHandlers: null, // Set of handlers to fire cursorActivity on
@@ -5185,7 +5147,8 @@ var codemirror = createCommonjsModule(function (module, exports) {
     doc.sel = sel;
 
     if (doc.cm) {
-      doc.cm.curOp.updateInput = doc.cm.curOp.selectionChanged = true;
+      doc.cm.curOp.updateInput = 1;
+      doc.cm.curOp.selectionChanged = true;
       signalCursorActivity(doc.cm);
     }
     signalLater(doc, "cursorActivity", doc);
@@ -5297,7 +5260,10 @@ var codemirror = createCommonjsModule(function (module, exports) {
     signal(doc, "beforeChange", doc, obj);
     if (doc.cm) { signal(doc.cm, "beforeChange", doc.cm, obj); }
 
-    if (obj.canceled) { return null }
+    if (obj.canceled) {
+      if (doc.cm) { doc.cm.curOp.updateInput = 2; }
+      return null
+    }
     return {from: obj.from, to: obj.to, text: obj.text, origin: obj.origin}
   }
 
@@ -8169,7 +8135,7 @@ var codemirror = createCommonjsModule(function (module, exports) {
       }
     }
 
-    var updateInput;
+    var updateInput = cm.curOp.updateInput;
     // Normal behavior is to insert the new text into every selection
     for (var i$1 = sel.ranges.length - 1; i$1 >= 0; i$1--) {
       var range$$1 = sel.ranges[i$1];
@@ -8182,7 +8148,6 @@ var codemirror = createCommonjsModule(function (module, exports) {
         else if (paste && lastCopied && lastCopied.lineWise && lastCopied.text.join("\n") == inserted)
           { from = to = Pos(from.line, 0); }
       }
-      updateInput = cm.curOp.updateInput;
       var changeEvent = {from: from, to: to, text: multiPaste ? multiPaste[i$1 % multiPaste.length] : textLines,
                          origin: origin || (paste ? "paste" : cm.state.cutIncoming ? "cut" : "+input")};
       makeChange(cm.doc, changeEvent);
@@ -8192,7 +8157,7 @@ var codemirror = createCommonjsModule(function (module, exports) {
       { triggerElectric(cm, inserted); }
 
     ensureCursorVisible(cm);
-    cm.curOp.updateInput = updateInput;
+    if (cm.curOp.updateInput < 2) { cm.curOp.updateInput = updateInput; }
     cm.curOp.typing = true;
     cm.state.pasteIncoming = cm.state.cutIncoming = false;
   }
@@ -9575,6 +9540,7 @@ var codemirror = createCommonjsModule(function (module, exports) {
 
   TextareaInput.prototype.onContextMenu = function (e) {
     var input = this, cm = input.cm, display = cm.display, te = input.textarea;
+    if (input.contextMenuPending) { input.contextMenuPending(); }
     var pos = posFromMouse(cm, e), scrollPos = display.scroller.scrollTop;
     if (!pos || presto) { return } // Opera is difficult.
 
@@ -9585,8 +9551,8 @@ var codemirror = createCommonjsModule(function (module, exports) {
       { operation(cm, setSelection)(cm.doc, simpleSelection(pos), sel_dontScroll); }
 
     var oldCSS = te.style.cssText, oldWrapperCSS = input.wrapper.style.cssText;
-    input.wrapper.style.cssText = "position: absolute";
-    var wrapperBox = input.wrapper.getBoundingClientRect();
+    var wrapperBox = input.wrapper.offsetParent.getBoundingClientRect();
+    input.wrapper.style.cssText = "position: static";
     te.style.cssText = "position: absolute; width: 30px; height: 30px;\n      top: " + (e.clientY - wrapperBox.top - 5) + "px; left: " + (e.clientX - wrapperBox.left - 5) + "px;\n      z-index: 1000; background: " + (ie ? "rgba(255, 255, 255, .05)" : "transparent") + ";\n      outline: none; border-width: 0; outline: none; overflow: hidden; opacity: .05; filter: alpha(opacity=5);";
     var oldScrollY;
     if (webkit) { oldScrollY = window.scrollY; } // Work around Chrome issue (#2712)
@@ -9595,7 +9561,7 @@ var codemirror = createCommonjsModule(function (module, exports) {
     display.input.reset();
     // Adds "Select all" to context menu in FF
     if (!cm.somethingSelected()) { te.value = input.prevInput = " "; }
-    input.contextMenuPending = true;
+    input.contextMenuPending = rehide;
     display.selForContextMenu = cm.doc.sel;
     clearTimeout(display.detectingSelectAll);
 
@@ -9616,6 +9582,7 @@ var codemirror = createCommonjsModule(function (module, exports) {
       }
     }
     function rehide() {
+      if (input.contextMenuPending != rehide) { return }
       input.contextMenuPending = false;
       input.wrapper.style.cssText = oldWrapperCSS;
       te.style.cssText = oldCSS;
@@ -9805,7 +9772,7 @@ var codemirror = createCommonjsModule(function (module, exports) {
 
   addLegacyProps(CodeMirror);
 
-  CodeMirror.version = "5.42.0";
+  CodeMirror.version = "5.42.2";
 
   return CodeMirror;
 
@@ -9942,7 +9909,8 @@ CodeMirror.overlayMode = function(base, overlay, combine) {
  */
 
 function getType(state) {
-  if (state.math) return "math";
+  if (state.math) return 'math';
+  if (state.emoji) return 'emoji';
   return null;
 }
 
@@ -9961,9 +9929,9 @@ function copyState(s) {
 function token(stream, state) {
   var ch = stream.next();
 
-  if (ch === "$") {
-    stream.eatWhile('$');
+  if (ch === '$') {
     var count = stream.current().length;
+    stream.eatWhile('$');
 
     if (state.math === 0) {
       state.math = count;
@@ -9976,11 +9944,15 @@ function token(stream, state) {
     }
   }
 
+  if (ch === ':' && stream.match(/^[^: \\/?'"]+:/)) {
+    return 'emoji';
+  }
+
   return getType(state);
 }
 
-codemirror.defineMode("smartmd", function (config) {
-  return codemirror.overlayMode(codemirror.getMode(config, "markdown"), {
+codemirror.defineMode('smartmd', function (config) {
+  return codemirror.overlayMode(codemirror.getMode(config, 'markdown'), {
     startState: startState,
     token: token,
     copyState: copyState
@@ -10080,10 +10052,7 @@ function replaceSelection (cm, active, startEnd, content) {
   var end = startEnd[1];
   var startPoint = cm.getCursor("start");
   var endPoint = cm.getCursor("end");
-
-  if (content) {
-    end = end.replace("#text#", content);
-  }
+  if (content) end = end.replace("#text#", content);
 
   if (active) {
     text = cm.getLine(startPoint.line);
@@ -10167,9 +10136,9 @@ function insertFencingAtSelection(cm, cur_start, cur_end, fenceCharsToInsert) {
   });
 }
 
-function toggleCodeBlock (editor) {
-  var fenceCharsToInsert = editor.options.blockStyles.code;
-  var cm = editor.codemirror,
+function toggleCodeBlock () {
+  var fenceCharsToInsert = this.options.blockStyles.code;
+  var cm = this.codemirror,
       cur_start = cm.getCursor("start"),
       cur_end = cm.getCursor("end"),
       tok = cm.getTokenAt({
@@ -10487,10 +10456,12 @@ function toggleHeading (cm, direction, size) {
   var endPoint = cm.getCursor("end");
 
   for (var i = startPoint.line; i <= endPoint.line; i++) {
-    var text = cm.getLine(i);
+    var text = cm.getLine(i); // count how much # isset
+
     var currHeadingLevel = text.search(/[^#]/);
 
     if (direction === "bigger") {
+      // less than 0 start over from 5
       switch (currHeadingLevel) {
         case 0:
           text = "###### " + text;
@@ -10504,6 +10475,7 @@ function toggleHeading (cm, direction, size) {
           text = text.substr(1);
       }
     } else if (direction === "smaller") {
+      // over 5 start over from 0
       switch (currHeadingLevel) {
         case 0:
           text = "# " + text;
@@ -10517,6 +10489,7 @@ function toggleHeading (cm, direction, size) {
           text = "#" + text;
       }
     } else {
+      // has direction
       switch (currHeadingLevel) {
         case 0:
           text = "".concat("#".repeat(size), " ").concat(text);
@@ -10543,8 +10516,8 @@ function toggleHeading (cm, direction, size) {
   cm.focus();
 }
 
-function cleanBlock (editor) {
-  var cm = editor.codemirror;
+function cleanBlock () {
+  var cm = this.codemirror;
   var startPoint = cm.getCursor("start");
   var endPoint = cm.getCursor("end");
   var text;
@@ -10578,7 +10551,6 @@ function assign(target, source) {
   });
   return target;
 }
-
 function extend(target) {
   for (var i = 1; i < arguments.length; i++) {
     target = assign(target, arguments[i]);
@@ -10593,10 +10565,21 @@ var isIos = /AppleWebKit/.test(userAgent) && /Mobile\/\w+/.test(userAgent);
 var isMac = isIos || /Mac/.test(platform); // This is woefully incomplete, will replace by web api in the future
 
 var isMobile = /(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(userAgent) || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw-(n|u)|c55\/|capi|ccwa|cdm-|cell|chtm|cldc|cmd-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc-s|devi|dica|dmob|do(c|p)o|ds(12|-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(-|_)|g1 u|g560|gene|gf-5|g-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd-(m|p|t)|hei-|hi(pt|ta)|hp( i|ip)|hs-c|ht(c(-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i-(20|go|ma)|i230|iac( |-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|-[a-w])|libw|lynx|m1-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|-([1-8]|c))|phil|pire|pl(ay|uc)|pn-2|po(ck|rt|se)|prox|psio|pt-g|qa-a|qc(07|12|21|32|60|-[2-7]|i-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h-|oo|p-)|sdk\/|se(c(-|0|1)|47|mc|nd|ri)|sgh-|shar|sie(-|m)|sk-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h-|v-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl-|tdg-|tel(i|m)|tim-|t-mo|to(pl|sh)|ts(70|m-|m3|m5)|tx-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas-|your|zeto|zte-/i.test(userAgent.substr(0, 4));
-var fixShortCuts = function fixShortCuts(key) {
+function inArray(search, arr) {
+  if (arr && arr.length) {
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i] === search) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+function fixShortCuts(key) {
   key = isMac ? key.replace("Ctrl", "Cmd") : key.replace("Cmd", "Ctrl");
   return key;
-};
+}
 function addClass(el, name) {
   el.className += " ".concat(name);
 }
@@ -10605,7 +10588,7 @@ function removeClass(el, name) {
     el.classList.remove(name);
   } else {
     // all class render again
-    var reg = new RegExp("\\s*".concat(name, "\\s*"));
+    var reg = new RegExp("\\s*".concat(name, "\\s*"), "g");
     el.className = el.className.replace(reg, "");
   }
 }
@@ -10628,7 +10611,7 @@ function fixShortcut(shortCuts) {
   return shortCuts;
 }
 function isUrl(url) {
-  return /^(?:([A-Za-z]+):)?(\/{0,3})([0-9.\-A-Za-z]+)(?::(\d+))?(?:\/([^?#]*))?(?:\?([^#]*))?(?:#(.*))?$/.test(url);
+  return /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(url);
 }
 function getToken() {
   var meta = document.getElementsByTagName("meta");
@@ -10655,12 +10638,48 @@ function isLocalStorage() {
 
   return true;
 }
+function def(obj, key, val, enumerable) {
+  Reflect.defineProperty(obj, key, {
+    value: val,
+    enumerable: Boolean(enumerable),
+    writable: true,
+    configurable: true
+  });
+}
+function isObject(obj) {
+  return obj !== null && _typeof(obj) === 'object';
+}
+function remove(arr, item) {
+  if (arr.length) {
+    var index = arr.indexOf(item);
+
+    if (index > -1) {
+      return arr.splice(index, 1);
+    }
+  }
+
+  return false;
+}
+function getElement(name) {
+  var mId = name.match(/^#([\w]+)/);
+  var mClass = name.match(/^\.([\w]+)/);
+
+  if (mId) {
+    return document.getElementById(mId[1]);
+  } else if (mClass) {
+    return document.getElementsByClassName(mClass[1]);
+  }
+
+  return false;
+}
 
 var utils = /*#__PURE__*/Object.freeze({
+  assign: assign,
   extend: extend,
   isIos: isIos,
   isMac: isMac,
   isMobile: isMobile,
+  inArray: inArray,
   fixShortCuts: fixShortCuts,
   addClass: addClass,
   removeClass: removeClass,
@@ -10669,99 +10688,193 @@ var utils = /*#__PURE__*/Object.freeze({
   fixShortcut: fixShortcut,
   isUrl: isUrl,
   getToken: getToken,
-  isLocalStorage: isLocalStorage
+  isLocalStorage: isLocalStorage,
+  def: def,
+  isObject: isObject,
+  remove: remove,
+  getElement: getElement
 });
 
-function togglePreview (editor) {
-  var cm = editor.codemirror;
-  var cmElement = cm.getWrapperElement();
-  var preview = editor.gui.preview;
-  var toolbar = editor.gui.toolbar;
-  var useSideBySideListener = false;
-  toggleClass(preview, "smartmd__preview--active");
-  toggleClass(cmElement, "CodeMirror-sided");
+var isFullScreen = false;
+function toggleFullScreen () {
+  var cm = this.codemirror;
+  var toolbar = this.gui.toolbar;
+  var preview = this.gui.preview;
+  cm.setOption('fullScreen', !cm.getOption('fullScreen'));
+  toggleClass(document.body, "body-hidden");
 
   if (toolbar) {
-    var button = editor.gui.toolbarElements.preview;
-    toggleClass(button, "active");
+    var button = this.gui.toolbarElements.fullscreen;
+    toggleClass(toolbar, "smartmd__toolbar--full");
+    if (button) toggleClass(button, "active");
   }
 
-  if (getClass(preview, "smartmd__preview--active")) {
-    useSideBySideListener = true;
+  if (isFullScreen) {
+    removeClass(preview, "smartmd__preview--full");
+    isFullScreen = false;
+  } else {
+    addClass(preview, "smartmd__preview--full");
+    isFullScreen = true;
   }
+}
 
-  var sideBySideRender = function sideBySideRender() {
-    preview.innerHTML = editor.markdown.render(editor.value());
+var isPreviewActive = false;
+
+function startPreview() {
+  var cm = this.codemirror;
+  var cmElement = cm.getWrapperElement();
+  var preview = this.gui.preview;
+  var previewBody = this.gui.previewBody;
+  addClass(preview, "smartmd__preview--active");
+  addClass(cmElement, "CodeMirror-sided");
+  previewBody.innerHTML = this.markdownIt.render(this.value());
+  cm.on('change', cm.renderPreviewFn);
+  cm.on('update', cm.updateScrollbar);
+}
+
+function removePreview() {
+  var cm = this.codemirror;
+  var cmElement = cm.getWrapperElement();
+  var preview = this.gui.preview;
+  removeClass(preview, "smartmd__preview--active");
+  removeClass(cmElement, "CodeMirror-sided");
+  cm.off('change', cm.renderPreviewFn);
+  cm.off('update', cm.updateScrollbar);
+}
+
+function togglePreview() {
+  var _this = this;
+
+  var toolbar = this.gui.toolbar;
+  var cm = this.codemirror;
+  var preview = this.gui.preview;
+  var previewScrollbar = this.gui.previewScrollbar;
+  var previewContent = this.gui.previewContent;
+  var previewBody = this.gui.previewBody;
+  var icon = false;
+  var cmScroll,
+      pScroll,
+      originScroll = false; // codeMirror editor scroll
+
+  cm.on("scroll", function (v) {
+    if (cmScroll) {
+      cmScroll = false;
+      return;
+    }
+
+    pScroll = true;
+    originScroll = true;
+    var height = v.getScrollInfo().height - v.getScrollInfo().clientHeight;
+    var ratio = parseFloat(v.getScrollInfo().top) / height;
+    var top = (previewScrollbar.scrollHeight - previewScrollbar.clientHeight) * ratio;
+    previewScrollbar.scrollTop = top;
+    previewContent.scrollTop = top;
+  }); // preview scrollbar scroll
+
+  previewScrollbar.onscroll = function () {
+    if (pScroll) {
+      pScroll = false;
+      return;
+    }
+
+    cmScroll = true;
+    originScroll = true;
+    var height = this.scrollHeight - this.clientHeight;
+    var ratio = parseFloat(this.scrollTop) / height;
+    var move = (cm.getScrollInfo().height - cm.getScrollInfo().clientHeight) * ratio;
+    previewContent.scrollTop = this.scrollTop;
+    cm.scrollTo(0, move);
   };
 
-  if (!cm.sideBySideRender) {
-    cm.sideBySideRender = sideBySideRender;
+  previewContent.onscroll = function () {
+    if (originScroll) {
+      originScroll = false;
+      return;
+    }
+
+    pScroll = true;
+    cmScroll = true;
+    var height = this.scrollHeight - this.clientHeight;
+    var ratio = parseFloat(this.scrollTop) / height;
+    var move = (cm.getScrollInfo().height - cm.getScrollInfo().clientHeight) * ratio;
+    previewScrollbar.scrollTop = this.scrollTop;
+    cm.scrollTo(0, move);
+  };
+
+  if (!cm.renderPreviewFn) {
+    cm.renderPreviewFn = function () {
+      previewBody.innerHTML = _this.markdownIt.render(_this.value());
+    };
   }
 
-  if (useSideBySideListener) {
-    preview.innerHTML = editor.markdown.render(editor.value());
-    cm.on("update", cm.sideBySideRender);
+  if (!cm.updateScrollbar) {
+    cm.updateScrollbar = function () {
+      var scrollHeight = previewContent.scrollHeight - 35;
+      var offsetHeight = previewContent.offsetHeight - 35;
+
+      if (scrollHeight <= offsetHeight) {
+        scrollHeight = offsetHeight;
+      }
+
+      previewScrollbar.firstElementChild.style.height = "".concat(scrollHeight, "px");
+    };
+  }
+
+  if (toolbar) icon = this.gui.toolbarElements.preview;
+
+  if (isPreviewActive) {
+    removePreview.apply(this);
+    if (icon) removeClass(icon, "active");
+    isPreviewActive = false;
   } else {
-    cm.off("update", cm.sideBySideRender);
+    startPreview.apply(this);
+    if (icon) addClass(icon, "active");
+    isPreviewActive = true;
+  }
+
+  if (isFullScreen) {
+    addClass(preview, "smartmd__preview--full");
+  } else {
+    removeClass(preview, "smartmd__preview--full");
   }
 
   cm.refresh();
 }
 
-function toggleRender (editor) {
-  var toolbar = editor.gui.toolbar;
-  var render = editor.gui.render;
+var isRenderActive = false;
+function toggleRender () {
+  var _this = this;
 
-  if (getClass(render, "smartmd__render--active")) {
+  var toolbar = this.gui.toolbar;
+  var render = this.gui.render;
+
+  if (isRenderActive) {
     removeClass(render, "smartmd__render--active");
-
-    if (toolbar) {
-      var button = editor.gui.toolbarElements.render;
-      if (button) removeClass(button, "active");
-      removeClass(toolbar, "smartmd__toolbar--disabled");
-    }
-
     setTimeout(function () {
       render.style.display = "none";
+      isRenderActive = false;
+      if (!toolbar) return;
+      var button = _this.gui.toolbarElements.render; // toggleRender button maybe hidden
+
+      if (button) removeClass(button, "active");
+      removeClass(toolbar, "smartmd__toolbar--disabled");
     }, 150);
   } else {
-    var renderBody = editor.gui.renderBody;
+    var renderBody = this.gui.renderBody;
 
     if (toolbar) {
-      var _button = editor.gui.toolbarElements.render;
+      var button = this.gui.toolbarElements.render;
+      if (button) addClass(button, "active");
       addClass(toolbar, "smartmd__toolbar--disabled");
-      addClass(_button, "active");
     }
 
-    renderBody.innerHTML = editor.markdown.render(editor.value());
+    renderBody.innerHTML = this.markdownIt.render(this.value());
     render.style.display = "block";
+    isRenderActive = true; // set renderBody enter animation
+
     setTimeout(function () {
       addClass(render, "smartmd__render--active");
     }, 0);
-  }
-}
-
-function toggleFullScreen (editor) {
-  var cm = editor.codemirror;
-  var toolbar = editor.gui.toolbar;
-  var preview = editor.gui.preview;
-  cm.setOption("fullScreen", !cm.getOption("fullScreen"));
-  toggleClass(document.body, "body-hidden");
-
-  if (toolbar) {
-    var button = editor.gui.toolbarElements.fullscreen;
-    toggleClass(toolbar, "smartmd__toolbar--full");
-    toggleClass(button, "active");
-  }
-
-  if (getClass(preview, "smartmd__preview--active")) {
-    if (getClass(preview, "smartmd__preview--full")) {
-      removeClass(preview, "smartmd__preview--full");
-      preview.style.height = editor.options.height;
-    } else {
-      addClass(preview, "smartmd__preview--full");
-      preview.style.height = "auto";
-    }
   }
 }
 
@@ -10801,256 +10914,89 @@ function toggleLine (cm, name) {
   cm.focus();
 }
 
-function buildUploadWidget () {
-  var widget = document.createElement("div");
-  widget.className = "smartmd__upload";
-  var progress = document.createElement("div");
-  progress.className = "smartmd__upload__progress";
-  widget.appendChild(progress);
-  return widget;
+function toggleBold() {
+  toggleBlock(this, "bold", this.options.blockStyles.bold);
 }
 
-var uploadImages = (function (editor, file) {
-  var options = editor.options;
-  var cm = editor.codemirror;
-  var url = options.uploads.url;
-  var maxSize = options.uploads.maxSize;
-  var type = options.uploads.type;
-  var suffix = file.name.toLowerCase().split(".").splice(-1)[0];
-  var delay = editor.options.alert.defaultDelay;
-
-  if (file.size / 1024 > maxSize) {
-    editor.alert("Image size is more than <strong>".concat(maxSize, "</strong> kb."), delay, "error");
-    return false;
-  } else if (type.indexOf(suffix) === -1) {
-    editor.alert("Image support format <strong>".concat(type.join(","), "</strong>."), delay, "error");
-    return false;
-  }
-
-  var from = cm.getCursor("start");
-  var uploadWidget = buildUploadWidget();
-  var progress = uploadWidget.firstChild;
-  cm.execCommand("newlineAndIndent");
-  var bookmark = cm.setBookmark(from, {
-    widget: uploadWidget
-  });
-  var formData = new FormData();
-  var xhr = new XMLHttpRequest();
-  xhr.open("post", url);
-
-  xhr.onreadystatechange = function () {
-    if (this.readyState === 4) {
-      bookmark.clear(); // write to parse your response data
-
-      try {
-        var data = JSON.parse(this.response);
-
-        if (xhr.status === 200) {
-          cm.setSelection(from);
-          cm.replaceSelection("![](".concat(data.path, ")"));
-        } else {
-          editor.alert("Upload failed on: ".concat(data.msg), delay, "error");
-        }
-      } catch (e) {
-        console.warn("Smartmd: Json data cannot be parse check your request return");
-      }
-    }
-  };
-
-  xhr.upload.onprogress = function (ev) {
-    if (ev.lengthComputable) {
-      var value = 100 * (ev.loaded / ev.total);
-
-      if (progress) {
-        progress.style.width = value + "%";
-        progress.innerText = Math.ceil(value) + "%";
-      }
-    }
-  };
-
-  formData.append("image", file); // try to get laravel csrf-token
-
-  var token = getToken();
-  if (token) xhr.setRequestHeader("X-CSRF-TOKEN", token.getAttribute("content"));
-  xhr.send(formData);
-  return true;
-});
-
-function alert (editor, content, delay, theme) {
-  var wrapper = editor.gui.alert;
-  theme = editor.options.alert.theme[theme] || editor.options.alert.theme.success;
-  var block = document.createElement("div");
-  var button = document.createElement("button");
-  button.className = "fa fa-close";
-  block.className = "smartmd__alert__item ".concat(theme.className);
-  block.innerHTML = "<i class='".concat(theme.icon, "'></i>").concat(content);
-  block.appendChild(button);
-  wrapper.appendChild(block);
-  setTimeout(function () {
-    addClass(block, "smartmd__alert__item--fadeIn");
-  }, 0);
-  var p = new Promise(function (resolve) {
-    button.onclick = function () {
-      resolve();
-    };
-
-    if (delay) {
-      setTimeout(function () {
-        resolve();
-      }, delay);
-    }
-  });
-  p.then(function () {
-    removeClass(block, "smartmd__alert__item--fadeIn");
-    setTimeout(function () {
-      block.remove();
-    }, 500);
-  });
+function toggleItalic() {
+  toggleBlock(this, "italic", this.options.blockStyles.italic);
 }
 
-function update(editor) {
-  var options = editor.options.autoSave;
-  var uuid = "smartmd_".concat(options.uuid);
-  var el = options.element;
-  var d = new Date();
-  var h = d.getHours();
-  var m = d.getMinutes();
-  var s = d.getSeconds();
-  m = m < 10 ? "0" + m : m;
-  h = h < 10 ? "0" + h : h;
-  s = s < 10 ? "0" + s : s;
-  el.innerHTML = "auto saved at: ".concat(h, ":").concat(m, ":").concat(s);
-  localStorage.setItem(uuid, editor.value());
-}
-function clearAutoSaved(editor) {
-  var options = editor.options.autoSave;
-
-  if (options && options.interavl) {
-    clearInterval(options.interavl);
-    options.element.innerHTML = "auto save stopped";
-  }
-}
-function clearAutoSavedValue(editor) {
-  var options = editor.options.autoSave;
-
-  if (options && options.uuid) {
-    var uuid = "smartmd_".concat(options.uuid);
-    localStorage.removeItem(uuid);
-  }
-}
-function autoSaveUpdate(editor) {
-  var options = editor.options.autoSave;
-
-  if (options && options.loaded) {
-    update(editor);
-  }
+function toggleStrikethrough() {
+  toggleBlock(this, "strikethrough", this.options.blockStyles.strikethrough);
 }
 
-function toggleBold(editor) {
-  toggleBlock(editor, "bold", editor.options.blockStyles.bold);
+function toggleBlockquote() {
+  toggleLine(this.codemirror, "quote");
 }
 
-function toggleItalic(editor) {
-  toggleBlock(editor, "italic", editor.options.blockStyles.italic);
+function toggleHeadingSmaller() {
+  toggleHeading(this.codemirror, "smaller");
 }
 
-function toggleStrikethrough(editor) {
-  toggleBlock(editor, "strikethrough", editor.options.blockStyles.strikethrough);
+function toggleHeadingBigger() {
+  toggleHeading(this.codemirror, "bigger");
 }
 
-function toggleBlockquote(editor) {
-  var cm = editor.codemirror;
-  toggleLine(cm, "quote");
+function toggleHeading1() {
+  toggleHeading(this.codemirror, false, 1);
 }
 
-function toggleHeadingSmaller(editor) {
-  var cm = editor.codemirror;
-  toggleHeading(cm, "smaller");
+function toggleHeading2() {
+  toggleHeading(this.codemirror, false, 2);
 }
 
-function toggleHeadingBigger(editor) {
-  var cm = editor.codemirror;
-  toggleHeading(cm, "bigger");
+function toggleHeading3() {
+  toggleHeading(this.codemirror, false, 3);
 }
 
-function toggleHeading1(editor) {
-  var cm = editor.codemirror;
-  toggleHeading(cm, false, 1);
+function toggleUnorderedList() {
+  toggleLine(this.codemirror, "unordered-list");
 }
 
-function toggleHeading2(editor) {
-  var cm = editor.codemirror;
-  toggleHeading(cm, false, 2);
+function toggleOrderedList() {
+  toggleLine(this.codemirror, "ordered-list");
 }
 
-function toggleHeading3(editor) {
-  var cm = editor.codemirror;
-  toggleHeading(cm, false, 3);
+function drawLink(text) {
+  var stat = getState(this.codemirror);
+  replaceSelection(this.codemirror, stat.link, this.options.insertTexts.link, text ? text : "");
 }
 
-function toggleUnorderedList(editor) {
-  var cm = editor.codemirror;
-  toggleLine(cm, "unordered-list");
+function drawMath() {
+  replaceSelection(this.codemirror, false, this.options.insertTexts.latex);
 }
 
-function toggleOrderedList(editor) {
-  var cm = editor.codemirror;
-  toggleLine(cm, "ordered-list");
+function drawChart() {
+  replaceSelection(this.codemirror, false, this.options.insertTexts.chart);
 }
 
-function drawLink(editor, url) {
-  var cm = editor.codemirror;
-  var inserTexts = editor.options.insertTexts;
-  var stat = getState(cm);
-  replaceSelection(cm, stat.link, inserTexts.link, url);
+function drawImage(text) {
+  var stat = getState(this.codemirror);
+  replaceSelection(this.codemirror, stat.image, this.options.insertTexts.image, text ? text : "");
 }
 
-function drawMath(editor) {
-  var cm = editor.codemirror;
-  var inserTexts = editor.options.insertTexts;
-  replaceSelection(cm, false, inserTexts.latex);
+function drawTable() {
+  var stat = getState(this.codemirror);
+  replaceSelection(this.codemirror, stat.table, this.options.insertTexts.table);
 }
 
-function drawChart(editor) {
-  var cm = editor.codemirror;
-  var inserTexts = editor.options.insertTexts;
-  replaceSelection(cm, false, inserTexts.chart);
+function drawHorizontalRule() {
+  var stat = getState(this.codemirror);
+  replaceSelection(this.codemirror, stat.image, this.options.insertTexts.horizontalRule);
 }
 
-function drawImage(editor, url) {
-  var cm = editor.codemirror;
-  var inserTexts = editor.options.insertTexts;
-  var stat = getState(cm);
-  replaceSelection(cm, stat.image, inserTexts.image, url);
+function undo() {
+  this.codemirror.undo();
+  this.codemirror.focus();
 }
 
-function drawTable(editor) {
-  var cm = editor.codemirror;
-  var inserTexts = editor.options.insertTexts;
-  var stat = getState(cm);
-  replaceSelection(cm, stat.table, inserTexts.table);
+function redo() {
+  this.codemirror.redo();
+  this.codemirror.focus();
 }
 
-function drawHorizontalRule(editor) {
-  var cm = editor.codemirror;
-  var stat = getState(cm);
-  var inserTexts = editor.options.insertTexts;
-  replaceSelection(cm, stat.image, inserTexts.horizontalRule);
-}
-
-function undo(editor) {
-  var cm = editor.codemirror;
-  cm.undo();
-  cm.focus();
-}
-
-function redo(editor) {
-  var cm = editor.codemirror;
-  cm.redo();
-  cm.focus();
-}
-
-var menu = {
+var menuList = {
   toggleBold: toggleBold,
   toggleItalic: toggleItalic,
   drawLink: drawLink,
@@ -11074,13 +11020,15 @@ var menu = {
   undo: undo,
   redo: redo,
   toggleRender: toggleRender,
-  toggleFullScreen: toggleFullScreen,
-  uploadImages: uploadImages,
-  alert: alert,
-  clearAutoSaved: clearAutoSaved,
-  clearAutoSavedValue: clearAutoSavedValue,
-  autoSaveUpdate: autoSaveUpdate
+  toggleFullScreen: toggleFullScreen
 };
+function initMenu (editor) {
+  for (var name in menuList) {
+    if (menuList.hasOwnProperty(name)) {
+      def(editor, name, menuList[name]);
+    }
+  }
+}
 
 var fullscreen = createCommonjsModule(function (module, exports) {
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
@@ -13294,68 +13242,59 @@ CodeMirror.defineMIME("text/x-markdown", "markdown");
 });
 });
 
-function CodeMirror$1 (options) {
+function draggable (editor, cm) {
+  codemirror.on(cm.display.lineDiv, "dragenter", function (ev) {
+    ev.preventDefault();
+    if (getClass(ev.target, "CodeMirror-line")) addClass(ev.target, "line-dragenter");
+    return false;
+  });
+  codemirror.on(cm.display.lineDiv, "drop", function (ev) {
+    ev.preventDefault();
+    if (!getClass(ev.target, "CodeMirror-line")) return;
+    removeClass(ev.target, "line-dragenter");
+    var files = ev.dataTransfer.files;
+    if (!files) return;
+    var lineNumber = cm.lineAtHeight(ev.pageY);
+    cm.setCursor(lineNumber, 0);
+
+    for (var i = 0; i < files.length; i++) {
+      editor.uploadImages(files[i]);
+    }
+  });
+  codemirror.on(cm.display.lineDiv, "dragleave", function (ev) {
+    ev.preventDefault();
+    if (getClass(ev.target, "CodeMirror-line")) removeClass(ev.target, "line-dragenter");
+  });
+}
+
+function CodeMirror$1 (editor) {
+  var options = editor.options;
   Object.keys(shortcuts).forEach(function (name) {
     var key = shortcuts[name];
 
-    if (menu[name]) {
+    if (menuList[name]) {
       options.CodeMirrorConfig.extraKeys[key] = function () {
-        return menu[name](options.parent);
+        return Reflect.apply(menuList[name], editor, []);
       };
     }
   });
-  var codemirror$$1 = codemirror.fromTextArea(options.element, options.CodeMirrorConfig);
-  codemirror.on(codemirror$$1.display.lineDiv, "dragenter", function (ev) {
-    ev.preventDefault();
-    addClass(ev.target, "line-dragEnter");
-    return false;
-  });
-  codemirror.on(codemirror$$1.display.lineDiv, "drop", function (ev) {
-    ev.preventDefault();
-    removeClass(ev.target, "line-dragEnter");
-    var files = ev.dataTransfer.files;
-
-    if (files) {
-      var lineNumber = codemirror$$1.lineAtHeight(ev.pageY);
-      codemirror$$1.setCursor(lineNumber, 0);
-
-      for (var i = 0; i < files.length; i++) {
-        options.parent.uploadImages(files[i]);
-      }
-    }
-
-    return false;
-  });
-  codemirror.on(codemirror$$1.display.lineDiv, "dragleave", function (ev) {
-    ev.preventDefault();
-    removeClass(ev.target, "line-dragEnter");
-    return false;
-  });
-  return codemirror$$1;
+  var placeholder = options.el.getAttribute("placeholder");
+  if (placeholder) options.CodeMirrorConfig.placeholder = placeholder;
+  var cm = codemirror.fromTextArea(options.el, options.CodeMirrorConfig);
+  draggable(editor, cm);
+  return cm;
 }
 
-var insertTexts = {
-  link: ["[link name](https://", "#text#)"],
-  image: ["![](https://", "#text#)"],
-  table: ["", "| Column 1 | Column 2 | Column 3 |\n| -------- | -------- | -------- |\n| Text     | Text     | Text     |\n\n"],
-  horizontalRule: ["", "\n\n-----\n\n"],
-  latex: ["$$\n\\begin{cases}3x + 5y +  z \\\\ 7x - 2y + 4z \\\\ -6x + 3y + 2z \\end{cases}", "\n$$"],
-  chart: ["```\ngraph LR\nA[Square Rect] -- Link text --> B((Circle))\nA --> C(Round Rect)\nB --> D{Rhombus}\nC --> D", "\n```"]
-};
-
-var alert$1 = {
-  defaultDelay: 3000,
-  theme: {
-    success: {
-      icon: "fa fa-check-circle",
-      className: "smartmd__alert__item--success",
-      defaultText: "Completed"
-    },
-    error: {
-      icon: "fa fa-close-circle",
-      className: "smartmd__alert__item--danger",
-      defaultText: "Some things wrong"
-    }
+var alertTheme = {
+  success: {
+    icon: "fa fa-check-circle",
+    className: "smartmd__alert__item--success",
+    defaultText: "Completed"
+  },
+  error: {
+    icon: "fa fa-close-circle",
+    className: "smartmd__alert__item--danger",
+    defaultText: "Some things wrong"
   }
 };
 
@@ -13393,11 +13332,11 @@ var CodeMirrorConfig = {
   matchTags: {
     bothTags: true
   },
-  placeholder: "Write your content",
+  placeholder: "Please enter the text ...",
   styleSelectedText: true
 };
 
-var toolbar = {
+var toolbarConfig = {
   "bold": {
     action: "toggleBold",
     className: "fa fa-bold",
@@ -13443,6 +13382,9 @@ var toolbar = {
     className: "fa fa-header fa-header-x fa-header-3",
     title: "Small Heading"
   },
+  "split-line-1": {
+    className: "split-line"
+  },
   "code": {
     action: "toggleCodeBlock",
     className: "fa fa-code",
@@ -13468,6 +13410,9 @@ var toolbar = {
     className: "fa fa-eraser fa-clean-block",
     title: "Clean block"
   },
+  "split-line-2": {
+    className: "split-line"
+  },
   "link": {
     action: "drawLink",
     className: "fa fa-link",
@@ -13481,12 +13426,12 @@ var toolbar = {
   "math": {
     action: "drawMath",
     className: "fa fa-superscript",
-    title: "math"
+    title: "Math Formula"
   },
   "chart": {
     action: "drawChart",
     className: "fa fa-sitemap",
-    title: "chart"
+    title: "Flow Chart"
   },
   "table": {
     action: "drawTable",
@@ -13497,6 +13442,9 @@ var toolbar = {
     action: "drawHorizontalRule",
     className: "fa fa-minus",
     title: "Insert Horizontal Line"
+  },
+  "split-line-3": {
+    className: "split-line"
   },
   "render": {
     action: "toggleRender",
@@ -13530,27 +13478,37 @@ var toolbar = {
   }
 };
 
+var blockStyles = {
+  bold: "**",
+  code: "```",
+  italic: "*",
+  strikethrough: "~~"
+};
+var insertTexts = {
+  link: ["[link name](https://", "#text#)"],
+  image: ["![](https://", "#text#)"],
+  table: ["", "| Column 1 | Column 2 | Column 3 |\n| -------- | -------- | -------- |\n| Text     | Text     | Text     |\n\n"],
+  horizontalRule: ["", "\n\n-----\n\n"],
+  latex: ["$$\n\\begin{cases}3x + 5y +  z \\\\ 7x - 2y + 4z \\\\ -6x + 3y + 2z \\end{cases}", "\n$$"],
+  chart: ["```\ngraph LR\nA[Square Rect] -- Link text --> B((Circle))\nA --> C(Round Rect)\nB --> D{Rhombus}\nC --> D", "\n```"]
+};
 var defaults = {
-  height: "400px",
-  highlight: true,
-  statusbar: ["autoSave", "lines", "words", "cursor"],
+  isFullScreen: false,
+  isPreviewActive: false,
+  statusbar: ['block', 'autoSave', 'lines', 'words', 'cursor'],
+  uploadsPath: "./upload",
   uploads: {
-    url: "./upload",
-    type: ["jpeg", "png", "bmp", "gif", "jpg"],
+    type: ['jpeg', 'png', 'bmp', 'gif', 'jpg'],
     maxSize: 4096
   },
-  blockStyles: {
-    "bold": "**",
-    "code": "```",
-    "italic": "*",
-    "strikethrough": "~~"
-  },
+  alertDelay: 5000,
+  blockStyles: blockStyles,
   insertTexts: insertTexts,
+  alertTheme: alertTheme,
   shortcuts: shortcuts,
-  alert: alert$1,
   MarkdownItConfig: MarkdownItConfig,
   CodeMirrorConfig: CodeMirrorConfig,
-  toolbar: toolbar
+  toolbarConfig: toolbarConfig
 };
 
 var Aacute = "Á";
@@ -25679,7 +25637,7 @@ function assign$2(obj /*from1, from2, from3, ...*/) {
 
 function _class(obj) { return Object.prototype.toString.call(obj); }
 function isString(obj) { return _class(obj) === '[object String]'; }
-function isObject(obj) { return _class(obj) === '[object Object]'; }
+function isObject$1(obj) { return _class(obj) === '[object Object]'; }
 function isRegExp(obj) { return _class(obj) === '[object RegExp]'; }
 function isFunction(obj) { return _class(obj) === '[object Function]'; }
 
@@ -25850,7 +25808,7 @@ function compile(self) {
 
     self.__compiled__[name] = compiled;
 
-    if (isObject(val)) {
+    if (isObject$1(val)) {
       if (isRegExp(val.validate)) {
         compiled.validate = createValidator(val.validate);
       } else if (isFunction(val.validate)) {
@@ -29478,14 +29436,15 @@ var plugins = {
     plugin: MermaidPlugin,
     options: {
       throwOnError: true,
-      errorColor: "#cc0000"
+      errorColor: '#cc0000'
     }
   },
   katex: {
     plugin: MarkdownItKatex
   }
 };
-function MarkdownIt$1 (options) {
+function MarkdownIt$1 (editor) {
+  var options = editor.options;
   var markdownOptions = options.MarkdownItConfig;
 
   if (options.highlight) {
@@ -29500,58 +29459,48 @@ function MarkdownIt$1 (options) {
 
   var md = _markdownIt_8_4_2_markdownIt(markdownOptions.options);
   markdownOptions.plugins.forEach(function (item) {
-    if (typeof item === "function") {
-      md.use(item);
-    } else if (typeof item === "string" && item in plugins) {
+    if (_typeof(item) === 'object') {
+      md.use(item.plugin, item.options);
+    } else if (typeof item === 'string' && item in plugins) {
       md.use(plugins[item].plugin, plugins[item].options || {});
     }
   });
   return md;
 }
 
-function buildPreview (options) {
-  var cm = options.parent.codemirror;
+function buildPreview (editor) {
+  var cm = editor.codemirror;
   var cmElement = cm.getWrapperElement();
   var preview = document.createElement("div");
-  preview.className = "smartmd__preview markdown-body";
-  var cScroll = false;
-  var pScroll = false;
-  cm.on("scroll", function (v) {
-    if (cScroll) {
-      cScroll = false;
-      return;
-    }
-
-    pScroll = true;
-    var height = v.getScrollInfo().height - v.getScrollInfo().clientHeight;
-    var ratio = parseFloat(v.getScrollInfo().top) / height;
-    preview.scrollTop = (preview.scrollHeight - preview.clientHeight) * ratio;
-  });
-
-  preview.onscroll = function () {
-    if (pScroll) {
-      pScroll = false;
-      return;
-    }
-
-    cScroll = true;
-    var height = preview.scrollHeight - preview.clientHeight;
-    var ratio = parseFloat(preview.scrollTop) / height;
-    var move = (cm.getScrollInfo().height - cm.getScrollInfo().clientHeight) * ratio;
-    cm.scrollTo(0, move);
-  };
-
+  var previewScrollbar = document.createElement("div");
+  var scrollbarChild = document.createElement("div");
+  var previewContent = document.createElement("div");
+  var previewBody = document.createElement("div");
+  preview.className = "smartmd__preview ";
+  previewScrollbar.className = "smartmd__preview__scrollbar";
+  previewContent.className = "smartmd__preview__content";
+  previewBody.className = "markdown-body";
+  scrollbarChild.style.minWidth = "1px";
+  previewScrollbar.appendChild(scrollbarChild);
+  preview.appendChild(previewScrollbar);
+  previewContent.appendChild(previewBody);
+  preview.appendChild(previewContent);
   cmElement.parentNode.append(preview);
-  return preview;
+  assign(editor.gui, {
+    preview: preview,
+    previewScrollbar: previewScrollbar,
+    previewBody: previewBody,
+    previewContent: previewContent
+  });
 }
 
 function buildTooltips(title, actionName) {
+  var action = menuList[actionName];
   var tooltips = title;
-  var action = menu[actionName];
 
   if (typeof action === "function") {
     if (shortcuts[actionName]) {
-      tooltips += "(".concat(fixShortcut(shortcuts[actionName]), ")");
+      tooltips += " (".concat(fixShortcut(shortcuts[actionName]), ")");
     }
   }
 
@@ -29560,52 +29509,76 @@ function buildTooltips(title, actionName) {
 
 function buildIcon(options) {
   var icon = document.createElement("a");
-
-  if (options.title) {
-    icon.title = buildTooltips(options.title, options.action);
-  }
-
+  if (options.title) icon.title = buildTooltips(options.title, options.action);
   icon.tabIndex = -1;
   icon.className = options.className;
   return icon;
 }
 
-function buildToolbar (options) {
-  var bar = document.createElement("div");
-  bar.className = "smartmd__toolbar";
+function buildItem(editor, name) {
+  var options = editor.options;
+  var toolbarConfig = options.toolbarConfig;
+  var item = toolbarConfig[name];
+  if (!item) return false;
+
+  if (/split-line-[0-9]+/.test(name)) {
+    var line = document.createElement("i");
+    line.className = item.className;
+    return line;
+  }
+
+  var icon = buildIcon(item);
+  var action = menuList[item.action];
+
+  if (typeof action === "function") {
+    icon.onclick = function (e) {
+      e.preventDefault();
+      Reflect.apply(action, editor, []);
+    };
+  } else if (isUrl(item.action)) {
+    icon.href = item.action;
+    icon.target = "_blank";
+  }
+
+  return icon;
+}
+
+function buildToolbar (editor) {
+  var toolbar = document.createElement("div");
   var toolbarElements = [];
+  var cm = editor.codemirror;
+  var options = editor.options;
+  var cmElement = cm.getWrapperElement();
+  var toolbarConfig = options.toolbarConfig; // set toolbar option
 
-  for (var key in options.toolbar) {
-    if (options.toolbar.hasOwnProperty(key)) {
-      var item = options.toolbar[key];
+  var toolbarOptions = options.toolbar;
+  var hideToolbar = options.hideToolbar;
+  toolbar.className = "smartmd__toolbar";
 
-      if (item) {
-        (function () {
-          var icon = buildIcon(item);
-          var action = menu[item.action];
+  function build(name) {
+    var icon = buildItem(editor, name);
+    if (!icon) return;
+    if (inArray(name, hideToolbar)) icon.style.display = "none";
+    toolbarElements[name] = icon;
+    toolbar.appendChild(icon);
+  }
 
-          if (typeof action === "function") {
-            icon.onclick = function (e) {
-              e.preventDefault();
-              action(options.parent);
-            };
-          } else if (isUrl(item.action)) {
-            icon.href = item.action;
-            icon.target = "_blank";
-          }
-
-          toolbarElements[key] = icon;
-          bar.appendChild(icon);
-        })();
-      }
+  if (Array.isArray(toolbarOptions)) {
+    for (var i = 0; i < toolbarOptions.length; i++) {
+      var name = toolbarOptions[i];
+      if (name === "|") name = "split-line";
+      build(name);
+    }
+  } else {
+    for (var _name in toolbarConfig) {
+      if (toolbarConfig.hasOwnProperty(_name)) build(_name);
     }
   }
 
-  var cm = options.parent.codemirror;
   cm.on("cursorActivity", function () {
     var stat = getState(cm);
-    Object.keys(bar).forEach(function (key) {
-      var item = bar[key];
+    Object.keys(toolbar).forEach(function (key) {
+      var item = toolbar[key];
 
       if (stat[key]) {
         addClass(item, "active");
@@ -29614,89 +29587,36 @@ function buildToolbar (options) {
       }
     });
   });
-  var cmElement = cm.getWrapperElement();
-  cmElement.parentNode.insertBefore(bar, cmElement);
-  return [bar, toolbarElements];
+  cmElement.parentNode.insertBefore(toolbar, cmElement);
+  assign(editor.gui, {
+    toolbar: toolbar,
+    toolbarElements: toolbarElements
+  });
 }
 
-function buildRender (options) {
-  var cm = options.parent.codemirror;
-  var cmElement = cm.getWrapperElement();
+function buildRender (editor) {
+  var cmElement = editor.codemirror.getWrapperElement();
   var render = document.createElement("div");
-  render.className = "smartmd__render";
   var container = document.createElement("div");
-  container.className = "smartmd__render__container";
   var closeButton = document.createElement("button");
+  var renderBody = document.createElement("div");
+  render.className = "smartmd__render";
+  container.className = "smartmd__render__container";
   closeButton.className = "smartmd__render__closeButton fa fa-close";
-  var body = document.createElement("div");
-  body.className = "markdown-body smartmd__render__body";
+  renderBody.className = "markdown-body smartmd__render__body";
   container.appendChild(closeButton);
-  container.appendChild(body);
+  container.appendChild(renderBody);
   render.appendChild(container);
-  cmElement.parentNode.append(render);
+  cmElement.parentNode.append(render); // closeButton click function
 
   closeButton.onclick = function () {
-    options.parent.toggleRender();
+    editor.toggleRender();
   };
 
-  return [render, body];
-}
-
-function getOptions$1(editor) {
-  if (!isLocalStorage()) return false;
-  var options = editor.options.autoSave;
-
-  if (_typeof(options) === "object") {
-    if (!options.uuid) {
-      console.warn("Smartmd: You must set a uuid to autosaved");
-      return false;
-    }
-
-    return options;
-  }
-
-  return false;
-}
-
-function update$1(editor) {
-  var options = editor.options.autoSave;
-  var uuid = "smartmd_".concat(options.uuid);
-  var el = options.element;
-  var d = new Date();
-  var h = d.getHours();
-  var m = d.getMinutes();
-  var s = d.getSeconds();
-  m = m < 10 ? "0" + m : m;
-  h = h < 10 ? "0" + h : h;
-  s = s < 10 ? "0" + s : s;
-  el.innerHTML = "auto saved at: ".concat(h, ":").concat(m, ":").concat(s);
-  localStorage.setItem(uuid, editor.value());
-}
-
-function autoSave$1(editor) {
-  var options = getOptions$1(editor);
-
-  if (options) {
-    var uuid = "smartmd_".concat(options.uuid);
-
-    if (options.form) {
-      options.form.addEventListener("submit", function () {
-        localStorage.removeItem(uuid);
-      });
-    } // reload saved text
-
-
-    var text = localStorage.getItem(uuid);
-
-    if (text) {
-      editor.codemirror.setValue(text);
-    }
-
-    options.loaded = true;
-    options.interavl = setInterval(function () {
-      update$1(editor);
-    }, options.delay || 10000);
-  }
+  assign(editor.gui, {
+    render: render,
+    renderBody: renderBody
+  });
 }
 
 function wordCount(data) {
@@ -29716,183 +29636,673 @@ function wordCount(data) {
   return count;
 }
 
-function buildStatusbar (options) {
+var defaultStatus = {
+  "words": {
+    defaultValue: "0",
+    onUpdate: function onUpdate(el) {
+      el.innerHTML = wordCount(this.codemirror.getValue());
+    }
+  },
+  "lines": {
+    defaultValue: "0",
+    onUpdate: function onUpdate(el) {
+      el.innerHTML = this.codemirror.lineCount();
+    }
+  },
+  "cursor": {
+    defaultValue: "0:0",
+    onUpdate: function onUpdate(el) {
+      var pos = this.codemirror.getCursor();
+      el.innerHTML = pos.line + ":" + pos.ch;
+    }
+  },
+  "autoSave": {
+    defaultValue: function defaultValue(el) {
+      el.innerHTML = "wait auto saving...";
+      this.options.autoSaveElement = el;
+    }
+  },
+  "block": {
+    defaultValue: "noType",
+    onUpdate: function onUpdate(el) {
+      var pos = this.codemirror.getCursor();
+      el.innerHTML = this.codemirror.getTokenTypeAt(pos) || "noType";
+    }
+  }
+};
+function buildStatusbar (editor) {
+  var options = editor.options;
+  var statusbarElements = [];
   var status = options.statusbar;
   var statusbar = document.createElement("div");
-  var cm = options.parent.codemirror;
+  var cm = editor.codemirror;
+  var cmElement = cm.getWrapperElement();
   statusbar.className = "smartmd__statusbar";
-  var defaultStatus = {
-    "words": {
-      defaultValue: 0,
-      onUpdate: function onUpdate(el) {
-        el.innerHTML = wordCount(cm.getValue());
-      }
-    },
-    "lines": {
-      defaultValue: 0,
-      onUpdate: function onUpdate(el) {
-        el.innerHTML = cm.lineCount();
-      }
-    },
-    "cursor": {
-      defaultValue: "0:0",
-      onUpdate: function onUpdate(el) {
-        var pos = cm.getCursor();
-        el.innerHTML = pos.line + ":" + pos.ch;
-      }
-    },
-    "autoSave": {
-      defaultValue: function defaultValue(el) {
-        if (_typeof(options.autoSave) === "object") {
-          el.innerHTML = "wait auto saving...";
-          options.autoSave.element = el;
-          autoSave$1(options.parent);
-        }
-      }
-    }
-  };
 
-  if (status && status.length > 0) {
+  if (Array.isArray(status)) {
     status.forEach(function (item) {
       var el = document.createElement("span");
-      var obj = item;
-
-      if (typeof item === "string") {
-        obj = defaultStatus[item];
-      }
-
-      el.className = obj.className || item;
+      var obj = defaultStatus[item];
+      if (!isObject(obj)) return;
+      el.className = obj.className || "smartmd__statusbar__".concat(item);
 
       if (typeof obj.onUpdate === "function") {
         cm.on("update", function () {
-          obj.onUpdate(el);
+          Reflect.apply(obj.onUpdate, editor, [el]);
         });
       }
 
       if (typeof obj.defaultValue === "function") {
-        obj.defaultValue(el);
-      } else {
+        Reflect.apply(obj.defaultValue, editor, [el]);
+      } else if (typeof obj.defaultValue === "string") {
         el.innerHTML = obj.defaultValue;
       } // append the item to the status bar
 
 
       statusbar.appendChild(el);
+      statusbarElements[item] = el;
     });
   }
 
-  var cmElement = cm.getWrapperElement();
   cmElement.parentNode.append(statusbar);
-  return statusbar;
+  assign(editor.gui, {
+    statusbar: statusbar,
+    statusbarElements: statusbarElements
+  });
 }
 
-function buildAlert (options) {
+function buildAlert (editor) {
   var alert = document.createElement("div");
+  var cmElement = editor.codemirror.getWrapperElement();
   alert.className = "smartmd__alert";
-  var cmElement = options.parent.codemirror.getWrapperElement();
   cmElement.parentNode.append(alert);
-  return alert;
+  editor.gui.alert = alert;
 }
 
-function gui (options) {
+function initGui (editor) {
+  var options = editor.options;
   var wrapper = document.createElement("div");
-  var cm = options.parent.codemirror;
+  var cm = editor.codemirror;
   var cmElement = cm.getWrapperElement();
   wrapper.className = "smartmd";
   cmElement.parentNode.replaceChild(wrapper, cmElement);
+  options.el.parentNode.replaceChild(wrapper, options.el);
   wrapper.appendChild(cmElement);
-  var preview = buildPreview(options);
-  var render, renderBody;
-  var alert = buildAlert(options);
+  wrapper.appendChild(options.el);
+  editor.gui = {};
+  editor.gui.wrapper = wrapper;
+  buildPreview(editor);
+  buildAlert(editor);
+  buildRender(editor);
+  buildToolbar(editor);
+  buildStatusbar(editor);
+}
 
-  var _buildRender = buildRender(options);
+function buildUploadWidget () {
+  var widget = document.createElement("div");
+  var progress = document.createElement("div");
+  widget.className = "smartmd__upload";
+  progress.className = "smartmd__upload__progress";
+  widget.appendChild(progress);
+  return widget;
+}
 
-  var _buildRender2 = _slicedToArray(_buildRender, 2);
+function checkImage(file) {
+  var options = this.options;
+  var maxSize = options.uploads.maxSize;
+  var type = options.uploads.type;
+  var suffix = file.name.toLowerCase().split(".").splice(-1)[0];
+  var delay = this.options.alertDelay;
 
-  render = _buildRender2[0];
-  renderBody = _buildRender2[1];
-  var toolbar,
-      toolbarElements,
-      statusbar = false;
-
-  if (options.toolbar) {
-    var _buildToolbar = buildToolbar(options);
-
-    var _buildToolbar2 = _slicedToArray(_buildToolbar, 2);
-
-    toolbar = _buildToolbar2[0];
-    toolbarElements = _buildToolbar2[1];
+  if (type.indexOf(suffix) === -1) {
+    this.alert("Image support format <strong>".concat(type.join(","), "</strong>."), delay, "error");
+    return false;
+  } else if (file.size / 1024 > maxSize) {
+    this.alert("Image size is more than <strong>".concat(maxSize, "</strong> kb."), delay, "error");
+    return false;
   }
 
-  if (options.statusbar) statusbar = buildStatusbar(options);
+  return true;
+}
+function uploadImages (file) {
+  var options = this.options;
+  var cm = this.codemirror;
+  var delay = this.options.alertDelay;
+  var url = options.uploads.url; // image validator
 
-  if (options.height) {
-    options.parent.codemirror.setSize("auto", options.height);
-    preview.style.height = options.height;
-  }
+  if (!Reflect.apply(checkImage, this, [file])) return;
+  var from = cm.getCursor("start");
+  var uploadWidget = buildUploadWidget();
+  var progress = uploadWidget.firstChild;
+  cm.execCommand("newlineAndIndent");
+  var bookmark = cm.setBookmark(from, {
+    widget: uploadWidget
+  });
+  var formData = new FormData();
+  var xhr = new XMLHttpRequest();
+  xhr.open("post", url);
 
-  return {
-    preview: preview,
-    render: render,
-    renderBody: renderBody,
-    toolbar: toolbar,
-    toolbarElements: toolbarElements,
-    wrapper: wrapper,
-    statusbar: statusbar,
-    alert: alert
+  xhr.onreadystatechange = function (response) {
+    if (this.readyState === 4) {
+      bookmark.clear(); // write to parse your response data
+
+      try {
+        var data = JSON.parse(response);
+
+        if (xhr.status === 200) {
+          cm.setSelection(from);
+          cm.replaceSelection("![](".concat(data.path, ")"));
+        } else {
+          this.alert("Upload failed on: ".concat(data.msg), delay, "error");
+        }
+      } catch (e) {
+        console.warn("Smartmd: Json data cannot be parse check your request return");
+      }
+    }
+  }.bind(this);
+
+  xhr.upload.onprogress = function (ev) {
+    if (ev.lengthComputable) {
+      var value = 100 * (ev.loaded / ev.total);
+
+      if (progress) {
+        progress.style.width = value + "%";
+        progress.innerText = Math.ceil(value) + "%";
+      }
+    }
   };
+
+  formData.append("image", file); // try to get laravel csrf-token
+
+  var token = getToken();
+  if (token) xhr.setRequestHeader("X-CSRF-TOKEN", token);
+  xhr.send(formData);
+}
+
+function alert (content, delay, theme) {
+  var alertWrapper = this.gui.alert;
+  theme = this.options.alertTheme[theme] || this.options.alertTheme.success;
+  var block = document.createElement("div");
+  var button = document.createElement("button");
+  button.className = "fa fa-close";
+  block.className = "smartmd__alert__item ".concat(theme.className);
+  block.innerHTML = "<i class='".concat(theme.icon, "'></i>").concat(content);
+  block.appendChild(button);
+  alertWrapper.appendChild(block);
+  setTimeout(function () {
+    addClass(block, "smartmd__alert__item--fadeIn");
+  }, 0);
+  var p = new Promise(function (resolve) {
+    button.onclick = function () {
+      resolve();
+    };
+
+    if (delay) {
+      setTimeout(function () {
+        resolve();
+      }, delay);
+    }
+  });
+  p.then(function () {
+    removeClass(block, "smartmd__alert__item--fadeIn");
+    setTimeout(function () {
+      block.remove();
+    }, 500);
+  });
+}
+
+var loaded,
+    interval,
+    autoSaveOptions,
+    el$1,
+    uuid = false;
+
+function getOptions() {
+  if (isObject(autoSaveOptions) && isLocalStorage()) {
+    if (!autoSaveOptions.uuid) {
+      console.warn("Smartmd: You must set a uuid to autoSaved");
+      return false;
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+function update() {
+  var d = new Date();
+  var h = d.getHours();
+  var m = d.getMinutes();
+  var s = d.getSeconds();
+  m = m < 10 ? "0" + m : m;
+  h = h < 10 ? "0" + h : h;
+  s = s < 10 ? "0" + s : s;
+  el$1.innerHTML = "auto saved at: ".concat(h, ":").concat(m, ":").concat(s);
+  localStorage.setItem(uuid, this.value());
+}
+
+function clearAutoSaved() {
+  if (!interval) return;
+  clearInterval(interval);
+  interval = false;
+  el$1.innerHTML = "auto save stopped";
+}
+function clearAutoSavedValue() {
+  if (uuid) localStorage.removeItem(uuid);
+}
+function autoSaveUpdate() {
+  if (loaded) update.apply(this);
+}
+function startAutoSave() {
+  autoSaveOptions = this.options.autoSave;
+  el$1 = this.options.autoSaveElement;
+  if (!getOptions()) return;
+  uuid = autoSaveOptions.uuid;
+  var delay = autoSaveOptions.delay || 5000;
+  var text = localStorage.getItem(uuid);
+  if (text) this.codemirror.setValue(text);
+  loaded = true; // restart autoSave need clear interval
+
+  clearAutoSaved();
+  update.apply(this);
+  interval = setInterval(update.bind(this), delay);
+}
+
+function toTextArea() {
+  var gui = this.gui;
+  var children = gui.wrapper.childNodes;
+  this.codemirror.toTextArea();
+
+  for (var i = 0; i < children.length; i++) {
+    if (children[i].nodeName !== 'TEXTAREA') {
+      children[i].remove();
+    }
+  }
+}
+
+function parsePixes(pixes) {
+  return isNaN(pixes) ? pixes : "".concat(pixes, "px");
+}
+
+function resize(width, height) {
+  var gui = this.gui;
+  if (width) gui.wrapper.style.width = parsePixes(width);
+  if (height) gui.wrapper.style.height = parsePixes(height);
+}
+
+function markdown$1(text) {
+  return this.markdownIt.render(text);
+}
+
+var ext = {
+  toTextArea: toTextArea,
+  alert: alert,
+  uploadImages: uploadImages,
+  autoSaveUpdate: autoSaveUpdate,
+  clearAutoSaved: clearAutoSaved,
+  clearAutoSavedValue: clearAutoSavedValue,
+  startAutoSave: startAutoSave,
+  resize: resize,
+  markdown: markdown$1
+};
+function initExtends (editor) {
+  for (var name in ext) {
+    if (ext.hasOwnProperty(name)) {
+      def(editor, name, ext[name]);
+    }
+  }
+}
+
+var uid = 0;
+
+var Dep =
+/*#__PURE__*/
+function () {
+  function Dep() {
+    _classCallCheck(this, Dep);
+
+    this.id = ++uid;
+    this.subs = [];
+  }
+
+  _createClass(Dep, [{
+    key: "addSub",
+    value: function addSub(sub) {
+      this.subs.push(sub);
+    }
+  }, {
+    key: "removeSub",
+    value: function removeSub(sub) {
+      remove(this.subs, sub);
+    }
+  }, {
+    key: "depend",
+    value: function depend() {
+      if (Dep.target) {
+        Dep.target.addDep(this);
+      }
+    }
+  }, {
+    key: "notify",
+    value: function notify() {
+      var subs = this.subs.slice();
+
+      for (var i = 0, l = subs.length; i < l; i++) {
+        subs[i].update();
+      }
+    }
+  }]);
+
+  return Dep;
+}();
+
+function defineReactive(obj, key, val) {
+  var dep = new Dep();
+  var property = Reflect.getOwnPropertyDescriptor(obj, key);
+  if (property && property.configurable === false) return;
+  var getter = property && property.get;
+  var setter = property && property.set;
+  if ((!getter || setter) && arguments.length === 2) val = obj[key];
+  var childOb = observe(val);
+  Reflect.defineProperty(obj, key, {
+    enumerable: true,
+    configurable: true,
+    get: function get() {
+      var value = getter ? Reflect.apply(getter, obj, []) : val;
+      dep.depend();
+
+      if (childOb) {
+        childOb.dep.depend();
+      }
+
+      return value;
+    },
+    set: function set(newVal) {
+      var value = getter ? Reflect.apply(getter, obj, []) : val;
+      if (newVal === value) return;
+      if (getter && !setter) return;
+
+      if (setter) {
+        Reflect.apply(setter, obj, [newVal]);
+      } else {
+        val = newVal;
+      }
+
+      dep.notify();
+    }
+  });
+}
+
+var Observer = function Observer(value) {
+  _classCallCheck(this, Observer);
+
+  this.value = value;
+  this.dep = new Dep();
+  def(value, '__ob__', this);
+
+  if (Array.isArray(value)) {
+    observeArray(value);
+  } else {
+    walk(value);
+  }
+};
+
+function walk(value) {
+  var keys = Object.keys(value);
+
+  for (var i = 0; i < keys.length; i++) {
+    defineReactive(value, keys[i]);
+  }
+}
+
+function observeArray(items) {
+  for (var i = 0; i < items.length; i++) {
+    observe(items[i]);
+  }
+}
+
+function observe(value) {
+  if (!isObject(value)) return false;
+  return new Observer(value);
+}
+
+var uid$1 = 0;
+Dep.target = null;
+var targetStack = [];
+function pushTarget(target) {
+  targetStack.push(target);
+  Dep.target = target;
+}
+function popTarget() {
+  targetStack.pop();
+  Dep.target = targetStack[targetStack.length - 1];
+}
+
+var Watcher =
+/*#__PURE__*/
+function () {
+  function Watcher(obj, exp, cb) {
+    _classCallCheck(this, Watcher);
+
+    this.obj = obj;
+    this.exp = exp;
+    this.cb = cb;
+    this.id = ++uid$1;
+    this.deps = [];
+    this.newDeps = [];
+    this.depIds = new Set();
+    this.newDepIds = new Set();
+    this.value = this.get();
+  }
+
+  _createClass(Watcher, [{
+    key: "update",
+    value: function update() {
+      this.run();
+    }
+  }, {
+    key: "run",
+    value: function run() {
+      var value = this.get();
+
+      if (value !== this.value) {
+        var oldValue = this.value;
+        this.value = value;
+        Reflect.apply(this.cb, this.obj, [value, oldValue]);
+      }
+    }
+  }, {
+    key: "get",
+    value: function get() {
+      pushTarget(this);
+      var value = this.obj[this.exp];
+      popTarget();
+      this.cleanupDeps();
+      return value;
+    }
+  }, {
+    key: "addDep",
+    value: function addDep(dep) {
+      var id = dep.id;
+
+      if (!this.newDepIds.has(id)) {
+        this.newDepIds.add(id);
+        this.newDeps.push(dep);
+
+        if (!this.depIds.has(id)) {
+          dep.addSub(this);
+        }
+      }
+    }
+  }, {
+    key: "cleanupDeps",
+    value: function cleanupDeps() {
+      var i = this.deps.length;
+
+      while (i--) {
+        var dep = this.deps[i];
+
+        if (!this.newDepIds.has(dep.id)) {
+          dep.removeSub(this);
+        }
+      }
+
+      var tmp = this.depIds;
+      this.depIds = this.newDepIds;
+      this.newDepIds = tmp;
+      this.newDepIds.clear();
+      tmp = this.deps;
+      this.deps = this.newDeps;
+      this.newDeps = tmp;
+      this.newDeps.length = 0;
+    }
+  }]);
+
+  return Watcher;
+}();
+
+var isFixed,
+    toolbarTop,
+    toolbar = false;
+function clearFixed() {
+  removeClass(toolbar, "smartmd__toolbar--fixed");
+  window.removeEventListener("scroll", checkHeight);
+}
+
+function checkHeight() {
+  var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+
+  if (scrollTop >= toolbarTop) {
+    if (isFixed) return;
+    isFixed = true;
+    addClass(toolbar, "smartmd__toolbar--fixed");
+  } else {
+    isFixed = false;
+    removeClass(toolbar, "smartmd__toolbar--fixed");
+  }
+}
+
+function startFixedToolbar() {
+  toolbar = this.gui.toolbar;
+  var ele = toolbar;
+  toolbarTop = toolbar.offsetTop;
+
+  while (ele.offsetParent) {
+    ele = ele.offsetParent;
+    toolbarTop += ele.offsetTop;
+  }
+
+  window.addEventListener("scroll", checkHeight);
+}
+
+function isFixedToolbar(val) {
+  val ? startFixedToolbar.apply(this) : clearFixed();
+}
+
+function autoSave(val) {
+  isObject(val) ? startAutoSave.apply(this) : clearAutoSaved();
+}
+
+function isRenderActive$1() {
+  this.toggleRender();
+}
+
+function isFullScreen$1() {
+  this.toggleFullScreen();
+}
+
+function isPreviewActive$1() {
+  this.togglePreview();
+}
+
+function height(val) {
+  this.resize(null, val);
+}
+
+function width(val) {
+  this.resize(val, null);
+}
+
+var watchers = {
+  isFixedToolbar: isFixedToolbar,
+  autoSave: autoSave,
+  isRenderActive: isRenderActive$1,
+  isFullScreen: isFullScreen$1,
+  isPreviewActive: isPreviewActive$1,
+  height: height,
+  width: width
+};
+function initState (editor) {
+  var options = editor.options; // init editor state with options
+
+  if (options.isFixedToolbar) startFixedToolbar.apply(editor);
+  if (isObject(options.autoSave)) startAutoSave.apply(editor);
+  if (options.isFullScreen) editor.toggleFullScreen();
+  if (options.isPreviewActive) editor.togglePreview();
+  if (options.width) editor.resize(options.width, null);
+  if (options.height) editor.resize(null, options.height);
+  var wClass = []; // watch options change
+
+  for (var name in watchers) {
+    if (watchers.hasOwnProperty(name)) {
+      var watch = new Watcher(options, name, watchers[name].bind(editor));
+      wClass.push(watch);
+    }
+  }
+
+  def(editor, 'state', wClass);
 }
 
 var Smartmd =
 /*#__PURE__*/
 function () {
   function Smartmd(options) {
-    var _this = this;
-
     _classCallCheck(this, Smartmd);
 
-    var opt = extend({}, defaults, options); // Find the textarea to use
+    var opt = extend({}, defaults, options); // find textArea element
 
-    if (!opt.element) {
-      // no element was found
-      console.warn("Smartmd: Error. No element was found.");
+    if (opt.el) {
+      opt.el = getElement(opt.el);
+      console.log(opt.el);
+    } else {
+      // no element found
+      console.error("Smartmd: Error. No element was found.");
       return;
     }
 
+    new Observer(opt);
     this.options = opt;
-    this.options.parent = this;
-
-    var _loop = function _loop(key) {
-      if (menu.hasOwnProperty(key)) {
-        _this[key] = function () {
-          for (var _len = arguments.length, params = new Array(_len), _key = 0; _key < _len; _key++) {
-            params[_key] = arguments[_key];
-          }
-
-          menu[key].apply(menu, [_this].concat(params));
-        };
-      }
-    };
-
-    for (var key in menu) {
-      _loop(key);
-    }
-
-    this.markdown = MarkdownIt$1(opt);
-    this.codemirror = CodeMirror$1(opt);
-    this.gui = gui(opt);
     this.utils = utils;
-    console.log(this);
+    this.markdownIt = MarkdownIt$1(this);
+    this.codemirror = CodeMirror$1(this); // toolbar list active function
+
+    initMenu(this); // Smartmd Class extend function
+
+    initExtends(this);
+    initGui(this);
+    initState(this);
   }
 
   _createClass(Smartmd, [{
     key: "value",
     value: function value(text) {
-      if (text !== undefined) {
-        this.codemirror.setValue(text);
-        return this;
+      if (text === undefined) {
+        return this.codemirror.getValue();
       }
 
-      return this.codemirror.getValue();
+      this.codemirror.setValue(text);
+      return this;
+    }
+  }, {
+    key: "set",
+    value: function set(options) {
+      if (isObject(options)) assign(this.options, options);
+    }
+  }, {
+    key: "get",
+    value: function get(option) {
+      return this.options[option];
     }
   }]);
 

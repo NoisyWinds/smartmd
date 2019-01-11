@@ -6,8 +6,7 @@
 <p align="center">
 <a href="https://travis-ci.org/NoisyWinds/laravel-smartmd"><img src="https://travis-ci.org/NoisyWinds/smartmd.svg?branch=master"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square" alt="Software License"></img></a>
-<a href="https://laravel.com"><img src="https://img.shields.io/badge/ie9-true-green.svg" alt="Software License"></img></a>
-<a href="https://packagist.org/packages/noisywinds/laravel-smartmd"><img src="https://img.shields.io/packagist/v/NoisyWinds/smartmd.svg" alt="packagist"></img></a>
+<a href="https://laravel.com"><img src="https://img.shields.io/badge/ie8-true-green.svg" alt="Software License"></img></a>
 </p>
 A markdown text editor compatible almost all markdown syntax, like Mathematical formula、flowchart、upload images...  
 
