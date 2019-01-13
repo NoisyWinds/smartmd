@@ -1,18 +1,25 @@
 # Smartmd
 ![](https://xiaoqingxin.site/images/default_img.jpg)
 <p align="center">
- <a href="./docs/api_EN.md">Documentation</a> | <a href="./docs/docs_CN.md">中文文档</a>
+ <a href="./docs/api.md">Documentation</a> | <a href="./docs/docs_cn.md">中文文档</a>
 </p>
 <p align="center">
-<a href="https://travis-ci.org/NoisyWinds/laravel-smartmd"><img src="https://travis-ci.org/NoisyWinds/smartmd.svg?branch=master"></a>
+<a href="https://travis-ci.org/NoisyWinds/smartmd"><img src="https://travis-ci.org/NoisyWinds/smartmd.svg?branch=master"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square" alt="Software License"></img></a>
 <a href="https://laravel.com"><img src="https://img.shields.io/badge/ie8-true-green.svg" alt="Software License"></img></a>
 </p>
 A markdown text editor compatible almost all markdown syntax, like Mathematical formula、flowchart、upload images...  
 
 ### Get smartmd
-
- 
+```node
+npm install smartmd 
+```
+```html
+<head>
+<link rel="stylesheet" href="dist/smartmd.min.css">
+<script src="dist/smartmd.min.js"></script>
+</head>
+```
 ### Quickstart
 ```javascript
 var editor = new Smartmd({
@@ -23,7 +30,7 @@ var editor = new Smartmd({
 ### Build Setup
 ```node
 # install reference
-npm install
+npm install smartmd 
 
 # build for development
 npm run dev
