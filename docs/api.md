@@ -55,7 +55,33 @@ var editor = new Smartmd({
 | autoSave.delay | string/number | 5000 | autosave delay
 | isFullScreen | Boolean | false | isFullScreen
 | isPreviewActive | Boolean | false | isPreviewActive
-...more
+| uploadPath | url | /upload | image upload path
+| uploads | object | object | uploads setting
+| uploads.maxSize | number | 'Image support format {type}.' | upload maxSize
+| uploads.type | array | ['jpeg', 'png', 'bmp', 'gif', 'jpg'] | upload type
+| uploads.typeError | string |  'Image support format {type}.' | type error message, {type} is your uploads valid type
+| uploads.sizeError | string |  'Image size is more than {maxSize} kb.' | maxSize error message, {maxSize} is your uploads maximum allowable size (one file)
+| uploads.serverError | string |  'Upload failed on {msg}'  | server error message, {msg} is your server return message
+| statusbar | array | ['block','autoSave', 'lines', 'words', 'cursor'] | statusbar shortcode
+
+#### some object setting 
+```javascript
+const options = {
+  autoSave: {
+   uuid: 1,
+   delay: 5000
+  },
+  uploads: {
+    type: ['jpeg', 'png', 'bmp', 'gif', 'jpg'],
+    maxSize: 4096,
+    typeError: 'Image support format {type}.',
+    sizeError: 'Image size is more than {maxSize} kb.',
+    serverError: 'Upload failed on {msg}' 
+  }
+}
+```
  
+#### feature
+
 
 

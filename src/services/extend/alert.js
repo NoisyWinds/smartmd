@@ -1,11 +1,12 @@
 import {addClass, removeClass} from "../utils";
 
-export default function (content, delay, theme) {
+export default function (content, theme, delay) {
   let alertWrapper = this.gui.alert;
   theme = this.options.alertTheme[theme] || this.options.alertTheme.success;
+  delay = delay || this.options.alertDelay;
 
-  let block = document.createElement("div");
-  let button = document.createElement("button");
+  const block = document.createElement("div");
+  const button = document.createElement("button");
   button.className = "fa fa-close";
   block.className = `smartmd__alert__item ${theme.className}`;
   block.innerHTML = `<i class='${theme.icon}'></i>${content}`;

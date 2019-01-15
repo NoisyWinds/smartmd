@@ -13505,7 +13505,10 @@
     uploadsPath: "./upload",
     uploads: {
       type: ['jpeg', 'png', 'bmp', 'gif', 'jpg'],
-      maxSize: 4096
+      maxSize: 4096,
+      typeError: 'Image support format {type}.',
+      sizeError: "Image size is more than {maxSize} kb.",
+      serverError: "Upload failed on {msg}"
     },
     alertDelay: 5000,
     blockStyles: blockStyles,
@@ -26732,16 +26735,6 @@
     decode: decode$2
   };
 
-  var punycode$1 = /*#__PURE__*/Object.freeze({
-    decode: decode$2,
-    encode: encode$2,
-    toUnicode: toUnicode,
-    toASCII: toASCII,
-    version: version,
-    ucs2: ucs2,
-    default: punycode
-  });
-
   // markdown-it default options
 
 
@@ -26921,8 +26914,6 @@
     }
   };
 
-  var punycode$2 = getCjsExportFromNamespace(punycode$1);
-
   var config = {
     'default': _default,
     zero: zero,
@@ -26965,7 +26956,7 @@
       //
       if (!parsed.protocol || RECODE_HOSTNAME_FOR.indexOf(parsed.protocol) >= 0) {
         try {
-          parsed.hostname = punycode$2.toASCII(parsed.hostname);
+          parsed.hostname = punycode.toASCII(parsed.hostname);
         } catch (er) { /**/ }
       }
     }
@@ -26985,7 +26976,7 @@
       //
       if (!parsed.protocol || RECODE_HOSTNAME_FOR.indexOf(parsed.protocol) >= 0) {
         try {
-          parsed.hostname = punycode$2.toUnicode(parsed.hostname);
+          parsed.hostname = punycode.toUnicode(parsed.hostname);
         } catch (er) { /**/ }
       }
     }
@@ -29766,17 +29757,21 @@
   }
 
   function checkImage(file) {
-    var options = this.options;
-    var maxSize = options.uploads.maxSize;
-    var type = options.uploads.type;
-    var suffix = file.name.toLowerCase().split(".").splice(-1)[0];
-    var delay = this.options.alertDelay;
+    var uploads = this.options.uploads;
+    var maxSize = uploads.maxSize;
+    var type = uploads.type;
+    var suffix = file.name.toLowerCase().split('.').splice(-1)[0];
 
     if (type.indexOf(suffix) === -1) {
-      this.alert("Image support format <strong>".concat(type.join(","), "</strong>."), delay, "error");
+      var error = uploads.typeError.replace('{type}', "<strong>".concat(type.join(','), "</strong>"));
+      this.alert(error, 'error');
       return false;
-    } else if (file.size / 1024 > maxSize) {
-      this.alert("Image size is more than <strong>".concat(maxSize, "</strong> kb."), delay, "error");
+    }
+
+    if (file.size / 1024 > maxSize) {
+      var _error = uploads.sizeError.replace('{maxSize}', "<strong>".concat(maxSize, "</strong>"));
+
+      this.alert(_error, 'error');
       return false;
     }
 
@@ -29785,20 +29780,19 @@
   function uploadImages (file) {
     var options = this.options;
     var cm = this.codemirror;
-    var delay = this.options.alertDelay;
     var url = options.uploads.url; // image validator
 
     if (!Reflect.apply(checkImage, this, [file])) return;
-    var from = cm.getCursor("start");
+    var from = cm.getCursor('start');
     var uploadWidget = buildUploadWidget();
     var progress = uploadWidget.firstChild;
-    cm.execCommand("newlineAndIndent");
+    cm.execCommand('newlineAndIndent');
     var bookmark = cm.setBookmark(from, {
       widget: uploadWidget
     });
     var formData = new FormData();
     var xhr = new XMLHttpRequest();
-    xhr.open("post", url);
+    xhr.open('post', url);
 
     xhr.onreadystatechange = function (response) {
       if (this.readyState === 4) {
@@ -29811,10 +29805,11 @@
             cm.setSelection(from);
             cm.replaceSelection("![](".concat(data.path, ")"));
           } else {
-            this.alert("Upload failed on: ".concat(data.msg), delay, "error");
+            var error = options.uploads.serverError.replace('{msg}', data.msg);
+            this.alert(error, 'error');
           }
         } catch (e) {
-          console.warn("Smartmd: Json data cannot be parse check your request return");
+          console.warn('Smartmd: Json data cannot be parse check your request return');
         }
       }
     }.bind(this);
@@ -29824,22 +29819,23 @@
         var value = 100 * (ev.loaded / ev.total);
 
         if (progress) {
-          progress.style.width = value + "%";
-          progress.innerText = Math.ceil(value) + "%";
+          progress.style.width = "".concat(value, "%");
+          progress.innerText = "".concat(Math.ceil(value), "%");
         }
       }
     };
 
-    formData.append("image", file); // try to get laravel csrf-token
+    formData.append('image', file); // try to get laravel csrf-token
 
     var token = getToken();
-    if (token) xhr.setRequestHeader("X-CSRF-TOKEN", token);
+    if (token) xhr.setRequestHeader('X-CSRF-TOKEN', token);
     xhr.send(formData);
   }
 
-  function alert (content, delay, theme) {
+  function alert (content, theme, delay) {
     var alertWrapper = this.gui.alert;
     theme = this.options.alertTheme[theme] || this.options.alertTheme.success;
+    delay = delay || this.options.alertDelay;
     var block = document.createElement("div");
     var button = document.createElement("button");
     button.className = "fa fa-close";

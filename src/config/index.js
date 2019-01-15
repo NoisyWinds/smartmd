@@ -24,11 +24,14 @@ const insertTexts = {
 export default {
   isFullScreen: false,
   isPreviewActive: false,
-  statusbar: ['block','autoSave', 'lines', 'words', 'cursor'],
+  statusbar: ['block', 'autoSave', 'lines', 'words', 'cursor'],
   uploadsPath: "./upload",
   uploads: {
     type: ['jpeg', 'png', 'bmp', 'gif', 'jpg'],
-    maxSize: 4096
+    maxSize: 4096,
+    typeError: 'Image support format {type}.',
+    sizeError: `Image size is more than {maxSize} kb.`,
+    serverError: `Upload failed on {msg}`
   },
   alertDelay: 5000,
   blockStyles,
