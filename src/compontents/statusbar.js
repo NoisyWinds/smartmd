@@ -69,12 +69,12 @@ export default function (editor) {
 
       if (typeof obj.onUpdate === "function") {
         cm.on("update", () => {
-          Reflect.apply(obj.onUpdate, editor, [el])
+          obj.onUpdate.apply(editor, [el]);
         });
       }
 
       if (typeof obj.defaultValue === "function") {
-        Reflect.apply(obj.defaultValue, editor, [el])
+        obj.defaultValue.apply(editor, [el])
       } else if (typeof obj.defaultValue === "string") {
         el.innerHTML = obj.defaultValue;
       }
@@ -85,7 +85,7 @@ export default function (editor) {
     })
   }
 
-  cmElement.parentNode.append(statusbar);
+  cmElement.parentNode.appendChild(statusbar);
 
   assign(editor.gui, {
     statusbar,

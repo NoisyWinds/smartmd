@@ -4,17 +4,17 @@ import {def, isObject} from "../utils";
 
 function defineReactive(obj, key, val) {
   const dep = new Dep();
-  let property = Reflect.getOwnPropertyDescriptor(obj, key);
+  let property = Object.getOwnPropertyDescriptor(obj, key);
   if (property && property.configurable === false) return;
   let getter = property && property.get;
   let setter = property && property.set;
   if ((!getter || setter) && arguments.length === 2) val = obj[key];
   let childOb = observe(val);
-  Reflect.defineProperty(obj, key, {
+  Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
     get() {
-      let value = getter ? Reflect.apply(getter, obj, []) : val;
+      let value = getter ? getter.apply(obj, []) : val;
       dep.depend();
       if (childOb) {
         childOb.dep.depend();
@@ -22,11 +22,11 @@ function defineReactive(obj, key, val) {
       return value;
     },
     set(newVal) {
-      let value = getter ? Reflect.apply(getter, obj, []) : val;
+      let value = getter ? getter.apply(obj, []) : val;
       if (newVal === value) return;
       if (getter && !setter) return;
       if (setter) {
-        Reflect.apply(setter, obj, [newVal])
+        setter.apply(obj, [newVal])
       } else {
         val = newVal;
       }

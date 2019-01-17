@@ -42,7 +42,7 @@ function buildItem(editor, name) {
   if (typeof action === "function") {
     icon.onclick = (e) => {
       e.preventDefault();
-      Reflect.apply(action, editor, []);
+      action.apply(editor);
     }
   } else if (isUrl(item.action)) {
     icon.href = item.action;

@@ -38,7 +38,7 @@ export default class Watcher {
     if (value !== this.value) {
       const oldValue = this.value;
       this.value = value;
-      Reflect.apply(this.cb, this.obj, [value, oldValue]);
+      this.cb.apply(this.obj, [value, oldValue]);
     }
   }
 

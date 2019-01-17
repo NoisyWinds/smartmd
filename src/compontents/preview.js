@@ -19,7 +19,7 @@ export default function (editor) {
   preview.appendChild(previewScrollbar);
   previewContent.appendChild(previewBody);
   preview.appendChild(previewContent);
-  cmElement.parentNode.append(preview);
+  cmElement.parentNode.appendChild(preview);
 
   assign(editor.gui, {
     preview,

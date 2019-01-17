@@ -3,7 +3,7 @@ export default function (editor) {
   const cmElement = editor.codemirror.getWrapperElement();
 
   alert.className = "smartmd__alert";
-  cmElement.parentNode.append(alert);
+  cmElement.parentNode.appendChild(alert);
 
   editor.gui.alert = alert
 }

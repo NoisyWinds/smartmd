@@ -60,7 +60,11 @@ function genConfig(name) {
     external: opts.external,
     plugins: [
       resolve({
-        extensions: [".js", ".ts"]
+        extensions: [".js"]
+      }),
+      babel({
+        exclude: 'node_modules/**',
+        runtimeHelpers: true
       }),
       postcss({
         extensions: [".css", ".scss"],
@@ -73,10 +77,6 @@ function genConfig(name) {
         include: "node_modules/**"
       }),
       flow(),
-      babel({
-        runtimeHelpers: true,
-        exclude: "node_modules/**"
-      }),
       json()
     ].concat(opts.plugins || []),
     output: {

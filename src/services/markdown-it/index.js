@@ -8,14 +8,14 @@ const plugins = {
     plugin: MarkdownItEmoji
   },
   mermaid: {
-    plugin: MarkdownItMermiad,
+    plugin: MarkdownItMermiad
+  },
+  katex: {
+    plugin: MarkdownItKatex,
     options: {
       throwOnError: true,
       errorColor: '#cc0000'
     }
-  },
-  katex: {
-    plugin: MarkdownItKatex
   }
 };
 

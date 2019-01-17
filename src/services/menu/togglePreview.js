@@ -2,6 +2,7 @@ import {addClass, removeClass} from '../utils';
 import {isFullScreen} from "./toggleFullScreen";
 
 export let isPreviewActive = false;
+let isInit = false;
 
 function startPreview() {
   const cm = this.codemirror;
@@ -27,14 +28,11 @@ function removePreview() {
   cm.off('update', cm.updateScrollbar);
 }
 
-export default function togglePreview() {
-  const toolbar = this.gui.toolbar;
+function initPreview() {
   const cm = this.codemirror;
-  const preview = this.gui.preview;
   const previewScrollbar = this.gui.previewScrollbar;
   const previewContent = this.gui.previewContent;
   const previewBody = this.gui.previewBody;
-  let icon = false;
   let cmScroll, pScroll, originScroll = false;
 
   // codeMirror editor scroll
@@ -81,22 +79,29 @@ export default function togglePreview() {
     cm.scrollTo(0, move);
   };
 
-  if (!cm.renderPreviewFn) {
-    cm.renderPreviewFn = () => {
-      previewBody.innerHTML = this.markdownIt.render(this.value());
-    };
-  }
-  if (!cm.updateScrollbar) {
-    cm.updateScrollbar = () => {
-      let scrollHeight = previewContent.scrollHeight - 35;
-      const offsetHeight = previewContent.offsetHeight - 35;
-      if (scrollHeight <= offsetHeight) {
-        scrollHeight = offsetHeight
-      }
-      previewScrollbar.firstElementChild.style.height = `${scrollHeight}px`;
-    }
-  }
+  cm.renderPreviewFn = () => {
+    previewBody.innerHTML = this.markdownIt.render(this.value());
+  };
 
+  cm.updateScrollbar = () => {
+    let scrollHeight = previewContent.scrollHeight - 35;
+    const offsetHeight = previewContent.offsetHeight - 35;
+    if (scrollHeight <= offsetHeight) {
+      scrollHeight = offsetHeight
+    }
+    previewScrollbar.firstElementChild.style.height = `${scrollHeight}px`;
+  };
+
+  isInit = true;
+}
+
+export default function togglePreview() {
+  const toolbar = this.gui.toolbar;
+  const cm = this.codemirror;
+  const preview = this.gui.preview;
+  let icon = false;
+
+  if (!isInit) initPreview.apply(this);
   if (toolbar) icon = this.gui.toolbarElements.preview;
 
   if (isPreviewActive) {

@@ -15,7 +15,7 @@ export default function (editor) {
   container.appendChild(closeButton);
   container.appendChild(renderBody);
   render.appendChild(container);
-  cmElement.parentNode.append(render);
+  cmElement.parentNode.appendChild(render);
 
   // closeButton click function
   closeButton.onclick = () => {

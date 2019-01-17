@@ -28,7 +28,7 @@ export default function (file) {
   const url = options.uploads.url;
 
   // image validator
-  if (!Reflect.apply(checkImage, this, [file])) return;
+  if (!checkImage.apply(this,[file])) return;
 
   const from = cm.getCursor('start');
   const uploadWidget = buildUploadWidget();

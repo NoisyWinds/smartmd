@@ -1,3 +1,17 @@
 {
-  "presets": ["@babel/env"]
+  "presets": [
+    [
+      "@babel/env",
+      {
+        "targets": {
+          "browsers": [
+            "last 2 versions",
+            "ie >= 7"
+          ]
+        },
+        "useBuiltIns": "usage"
+      },
+      "stage-2"
+    ]
+  ]
 }

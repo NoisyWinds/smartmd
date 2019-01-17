@@ -111,7 +111,7 @@ export function isLocalStorage() {
 }
 
 export function def(obj, key, val, enumerable) {
-  Reflect.defineProperty(obj, key, {
+  Object.defineProperty(obj, key, {
     value: val,
     enumerable: Boolean(enumerable),
     writable: true,
