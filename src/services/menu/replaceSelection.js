@@ -1,11 +1,10 @@
-export default function (cm, active, startEnd, content) {
+export default function (cm, active, startEnd, content = null) {
   let text;
   let start = startEnd[0];
   let end = startEnd[1];
   let startPoint = cm.getCursor("start");
   let endPoint = cm.getCursor("end");
-  if (content) end = end.replace("#text#", content);
-
+  if (content !== null) end = end.replace("#text#", content);
   if (active) {
     text = cm.getLine(startPoint.line);
     start = text.slice(0, startPoint.ch);

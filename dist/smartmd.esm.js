@@ -17049,13 +17049,14 @@ function getState (cm, pos) {
   return ret;
 }
 
-function replaceSelection (cm, active, startEnd, content) {
+function replaceSelection (cm, active, startEnd) {
+  var content = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
   var text;
   var start = startEnd[0];
   var end = startEnd[1];
   var startPoint = cm.getCursor("start");
   var endPoint = cm.getCursor("end");
-  if (content) end = end.replace("#text#", content);
+  if (content !== null) end = end.replace("#text#", content);
 
   if (active) {
     text = cm.getLine(startPoint.line);
