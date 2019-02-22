@@ -1,6 +1,6 @@
 {
   "name": "smartmd",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Markdown editor support most syntax",
   "keywords": [
     "markdown",
@@ -17,7 +17,6 @@
   },
   "homepage": "https://github.com/NoisyWinds/smartmd",
   "main": "./src/js/smartmd.min.js",
-  "types": "./types/index.d.ts",
   "license": "MIT",
   "author": {
     "name": "NoisyWinds",
