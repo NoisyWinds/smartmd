@@ -1,4 +1,9 @@
 # Documentation
+![](https://xiaoqingxin.site/images/default_img.jpg)
+## Demos
+editor demo: [Demo](https://xiaoqingxin.site/editor/write)   
+js render page [Demo](https://xiaoqingxin.site/editor/js-show)  
+php render page [Demo](https://xiaoqingxin.site/editor/php-show)
 
 ### Build Setup
 ```node
@@ -19,7 +24,7 @@ var editor = new Smartmd({
 });
 ```
 
-### Setting
+### Useful
 ```javascript
 var editor = new Smartmd({
    // editor element {string} 
@@ -43,45 +48,162 @@ var editor = new Smartmd({
    
 });
 ```
-#### All Setting:
 
-| name | type | default | description |
-| ------ | ------| ------ | ------ |
-| el | dom | undefined | editor element
-| width | string/number | "auto" | width
-| height | string/number | "auto" | height
-| autoSave | object | undefined | set uuid to start autosave
-| autoSave.uuid | string/number | undefined | store key
-| autoSave.delay | string/number | 5000 | autosave delay
-| isFullScreen | Boolean | false | isFullScreen
-| isPreviewActive | Boolean | false | isPreviewActive
-| uploadPath | url | /upload | image upload path
-| uploads | object | object | uploads setting
-| uploads.maxSize | number | 'Image support format {type}.' | upload maxSize
-| uploads.type | array | ['jpeg', 'png', 'bmp', 'gif', 'jpg'] | upload type
-| uploads.typeError | string |  'Image support format {type}.' | type error message, {type} is your uploads valid type
-| uploads.sizeError | string |  'Image size is more than {maxSize} kb.' | maxSize error message, {maxSize} is your uploads maximum allowable size (one file)
-| uploads.serverError | string |  'Upload failed on {msg}'  | server error message, {msg} is your server return message
-| statusbar | array | ['block','autoSave', 'lines', 'words', 'cursor'] | statusbar shortcode
-
-#### some object setting 
+## more setting:
 ```javascript
 const options = {
-  autoSave: {
-   uuid: 1,
-   delay: 5000
-  },
+   // editor element {string} 
+   el: "#editor",
+   
+   // editor wrapper layout {string or number}
+   height: "400px",
+   width: "100%",
+   
+   // autosave 
+   autoSave: {
+     // uuid is required {string or number}
+     uuid: 1,
+     // {number}
+     delay: 5000
+   },
+   
+   // init state {boolean}
+  isFullScreen: true, // default false
+  isPreviewActive: true, // default false
+  
+  // upload image (need server)
   uploads: {
     type: ['jpeg', 'png', 'bmp', 'gif', 'jpg'],
     maxSize: 4096,
     typeError: 'Image support format {type}.',
     sizeError: 'Image size is more than {maxSize} kb.',
     serverError: 'Upload failed on {msg}' 
-  }
+  },
+  // statusbar default
+  statusbar: ['block', 'autoSave', 'lines', 'words', 'cursor'],
+  
+  // alert hidde delay
+  alertDelay: 5000,
+  
+  // insert Text default #text# is replace text
+  insertTexts:{
+    link: ["[link name](https://", "#text#)"],
+    image: ["![](https://", "#text#)"],
+    table: ["", "| Column 1 | Column 2 | Column 3 |\n| -------- | -------- | -------- |\n| Text     | Text     | Text     |\n\n"],
+    horizontalRule: ["", "\n\n-----\n\n"],
+    latex: ["$$\n\\begin{cases}3x + 5y +  z \\\\ 7x - 2y + 4z \\\\ -6x + 3y + 2z \\end{cases}", "\n$$"],
+    chart: ["```\ngraph LR\nA[Square Rect] -- Link text --> B((Circle))\nA --> C(Round Rect)\nB --> D{Rhombus}\nC --> D", "\n```"]
+  },
+  
+  // default blockStyles 
+  blockStyles:{
+    bold: "**",
+    code: "```",
+    italic: "*",
+    strikethrough: "~~"
+  },
+  // default CodeMirrorConfig
+  CodeMirrorConfig:{
+       mode: "smartmd", // change mode some highligh will disappear
+       theme: "paper",
+       tabSize: 2,
+       indentUnit: 2,
+       indentWithTabs: true,
+       lineNumbers: false,
+       autofocus: false,
+       lineWrapping: true,
+       allowDropFileTypes: ["text/plain"],
+       autoCloseTags: false,
+       matchTags: {bothTags: true},
+       placeholder: "Please enter the text ...", // default placeholder
+       styleSelectedText: true
+  },
+  // default MarkdownItConfig
+  MarkdownItConfig:{
+       options: {
+         langPrefix: 'language-',
+         breaks: true
+       },
+       plugins:['mermaid','katex','emoji'] // extand yourself plugins
+  },
+  // default shortcuts auto compatible ios system
+  shortcuts: {
+       toggleBold: "Ctrl-B",
+       toggleItalic: "Ctrl-I",
+       drawLink: "Ctrl-K",
+       toggleHeadingSmaller: "Ctrl-H",
+       toggleHeadingBigger: "Shift-Ctrl-H",
+       cleanBlock: "Ctrl-E",
+       drawMath: "Ctrl-M",
+       drawImage: "Ctrl-P",
+       toggleBlockquote: "Ctrl-'",
+       toggleOrderedList: "Ctrl-Alt-L",
+       toggleUnorderedList: "Ctrl-L",
+       toggleCodeBlock: "Ctrl-Alt-C",
+       togglePreview: "F9",
+       toggleRender: "Ctrl-P",
+       toggleFullScreen: "F11",
+       drawChart: "Ctrl-Alt-M",
+       autoSaveUpdate: "Ctrl-S"
+  },
+  // default alertTheme
+  alertTheme: {
+         success: {
+           icon: "fa fa-check-circle",
+           className: "smartmd__alert__item--success",
+           defaultText: "Completed"
+         },
+         error: {
+           icon: "fa fa-close-circle",
+           className: "smartmd__alert__item--danger",
+           defaultText: "Some things wrong"
+         }
+  },
+  // default all tools and you can set your used
+  toolbar:["heading-1"]
 }
 ```
- 
-#### feature
 
+## API
 
+```javascript
+let editor = new Smartmd({el: "#eidtor"})
 
+// toolbar functions
+editor.toggleBold();
+editor.toggleItalic();
+editor.toggleStrikethrough();
+editor.toggleBlockquote();
+editor.toggleHeadingSmaller();
+editor.toggleHeadingBigger();
+editor.toggleHeading1();
+editor.toggleHeading2();
+editor.toggleHeading3();
+editor.toggleUnorderedList();
+editor.toggleOrderedList();
+editor.drawLink("your link");
+editor.drawMath();
+editor.drawChart();
+editor.drawImage("your image url");
+editor.drawTable();
+editor.drawHorizontalRule();
+editor.undo();
+ediotr.redo();
+
+// toggle preview
+editor.togglePreview();
+// toggleRenderBox 
+editor.toggleRender();
+// toggleFullScreenl
+editor.toggleFullScreen();
+
+// value watcher
+editor.options.isFixedToolbar = false;
+editor.options.isFullScreen = false;
+editor.options.isPreviewActive = false;
+editor.options.width = "800px";
+editor.options.height = "80vh";
+
+// editor alert
+editor.alert("some thing","error")
+```

@@ -36178,10 +36178,11 @@ function mermaidChart(code) {
 }
 
 function MermaidPlugin(markdownIt) {
-  if (mermaid) {
+  if (window.mermaid) {
     markdownIt.mermaid = mermaid;
+    var temp = markdownIt.renderer.rules.fence.bind(markdownIt.renderer.rules);
 
-    markdownIt.renderer.rules.fence = function (tokens, idx) {
+    markdownIt.renderer.rules.fence = function (tokens, idx, options, env, slf) {
       var token = tokens[idx];
       var code = token.content.trim();
 
@@ -36190,11 +36191,15 @@ function MermaidPlugin(markdownIt) {
       }
 
       var firstLine = code.split(/\n/)[0].trim();
-      if (firstLine === 'gantt' || firstLine === 'sequenceDiagram' || firstLine.match(/^graph (?:TB|BT|RL|LR|TD);?$/)) return mermaidChart(code);
-      return tokens;
+
+      if (firstLine === 'gantt' || firstLine === 'sequenceDiagram' || firstLine.match(/^graph (?:TB|BT|RL|LR|TD);?$/)) {
+        return mermaidChart(code);
+      }
+
+      return temp(tokens, idx, options, env, slf);
     };
   } else {
-    console.warn('Smartmd: mermaid is used but not import');
+    throw new ReferenceError('Smartmd: mermaid is used but not import');
   }
 }
 
@@ -36433,7 +36438,7 @@ function MarkdownItKatex (md, options) {
     md.renderer.rules.math_inline = inlineRenderer;
     md.renderer.rules.math_block = blockRenderer;
   } else {
-    console.warn("Smartmd: katex is used but not import");
+    throw new ReferenceError("Smartmd: katex is used but not import");
   }
 }
 
@@ -36462,7 +36467,7 @@ function MarkdownIt$1 (editor) {
         return "<pre class=\"hljs\"><code>".concat(window.hljs.highlightAuto(str).value, "</code></pre>");
       };
     } else {
-      console.warn("Smartmd: highlight used but not import");
+      throw new ReferenceError("Smartmd: highlight used but not import");
     }
   }
 
@@ -36778,6 +36783,8 @@ function checkImage(file) {
   return true;
 }
 function uploadImages (file) {
+  var _this = this;
+
   var options = this.options;
   var cm = this.codemirror;
   var url = options.uploads.url; // image validator
@@ -36794,25 +36801,30 @@ function uploadImages (file) {
   var xhr = new XMLHttpRequest();
   xhr.open('post', url);
 
-  xhr.onreadystatechange = function (response) {
-    if (this.readyState === 4) {
-      bookmark.clear(); // write to parse your response data
+  xhr.onreadystatechange = function () {
+    bookmark.clear();
 
+    if (xhr.readyState === 4) {
+      // write to parse your xhr.responseText data
       try {
-        var data = JSON.parse(response);
+        var data = JSON.parse(xhr.responseText);
 
         if (xhr.status === 200) {
           cm.setSelection(from);
           cm.replaceSelection("![](".concat(data.path, ")"));
+
+          _this.alert(data.message);
         } else {
           var error = options.uploads.serverError.replace('{msg}', data.msg);
-          this.alert(error, 'error');
+
+          _this.alert(error, 'error');
         }
       } catch (e) {
-        console.warn('Smartmd: Json data cannot be parse check your request return');
+        console.log(xhr.responseText);
+        throw new SyntaxError('Smartmd: Json data cannot be parse check your request return');
       }
     }
-  }.bind(this);
+  };
 
   xhr.upload.onprogress = function (ev) {
     if (ev.lengthComputable) {
@@ -37278,11 +37290,9 @@ function () {
 
     if (opt.el) {
       opt.el = getElement(opt.el);
-      console.log(opt.el);
     } else {
       // no element found
-      console.error("Smartmd: Error. No element was found.");
-      return;
+      throw new ReferenceError("Smartmd: Error. No element was found.");
     }
 
     new Observer$1(opt);

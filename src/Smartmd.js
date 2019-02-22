@@ -16,11 +16,9 @@ export class Smartmd {
     // find textArea element
     if (opt.el) {
       opt.el = utils.getElement(opt.el);
-      console.log(opt.el);
     } else {
       // no element found
-      console.error("Smartmd: Error. No element was found.");
-      return
+      throw new ReferenceError("Smartmd: Error. No element was found.");
     }
 
     new Observer(opt);

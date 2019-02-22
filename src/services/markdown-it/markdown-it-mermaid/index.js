@@ -10,10 +10,10 @@ function mermaidChart(code) {
 }
 
 function MermaidPlugin(markdownIt) {
-  if (mermaid) {
+  if (window.mermaid) {
     markdownIt.mermaid = mermaid;
-
-    markdownIt.renderer.rules.fence = (tokens, idx) => {
+    const temp = markdownIt.renderer.rules.fence.bind(markdownIt.renderer.rules)
+    markdownIt.renderer.rules.fence = (tokens, idx, options, env, slf) => {
       let token = tokens[idx];
       let code = token.content.trim();
       if (token.info === 'mermaid') {
@@ -21,11 +21,13 @@ function MermaidPlugin(markdownIt) {
       }
 
       let firstLine = code.split(/\n/)[0].trim();
-      if (firstLine === 'gantt' || firstLine === 'sequenceDiagram' || firstLine.match(/^graph (?:TB|BT|RL|LR|TD);?$/)) return mermaidChart(code);
-      return tokens;
+      if (firstLine === 'gantt' || firstLine === 'sequenceDiagram' || firstLine.match(/^graph (?:TB|BT|RL|LR|TD);?$/)){
+        return mermaidChart(code);
+      }
+      return temp(tokens, idx, options, env, slf)
     }
   } else {
-    console.warn('Smartmd: mermaid is used but not import')
+    throw new ReferenceError('Smartmd: mermaid is used but not import')
   }
 }
 

@@ -212,6 +212,6 @@ export default function (md, options) {
     md.renderer.rules.math_inline = inlineRenderer;
     md.renderer.rules.math_block = blockRenderer
   } else {
-    console.warn("Smartmd: katex is used but not import")
+    throw new ReferenceError("Smartmd: katex is used but not import")
   }
 }

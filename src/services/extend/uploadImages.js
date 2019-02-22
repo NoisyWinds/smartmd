@@ -34,32 +34,33 @@ export default function (file) {
   const uploadWidget = buildUploadWidget();
   const progress = uploadWidget.firstChild;
   cm.execCommand('newlineAndIndent');
-  const bookmark = cm.setBookmark(from, {
+  let bookmark = cm.setBookmark(from, {
     widget: uploadWidget
   });
 
   const formData = new FormData();
   const xhr = new XMLHttpRequest();
-
   xhr.open('post', url);
-  xhr.onreadystatechange = function (response) {
-    if (this.readyState === 4) {
-      bookmark.clear();
-      // write to parse your response data
+  xhr.onreadystatechange = () => {
+    bookmark.clear();
+    if (xhr.readyState === 4) {
+      // write to parse your xhr.responseText data
       try {
-        const data = JSON.parse(response);
+        let data = JSON.parse(xhr.responseText);
         if (xhr.status === 200) {
           cm.setSelection(from);
           cm.replaceSelection(`![](${data.path})`);
+          this.alert(data.message);
         } else {
           const error = options.uploads.serverError.replace('{msg}', data.msg);
           this.alert(error, 'error');
         }
       } catch (e) {
-        console.warn('Smartmd: Json data cannot be parse check your request return');
+        console.log(xhr.responseText);
+        throw new SyntaxError('Smartmd: Json data cannot be parse check your request return');
       }
     }
-  }.bind(this);
+  };
 
   xhr.upload.onprogress = (ev) => {
     if (ev.lengthComputable) {

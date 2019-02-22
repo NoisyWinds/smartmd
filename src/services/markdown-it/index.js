@@ -29,7 +29,7 @@ export default function (editor) {
         return `<pre class="hljs"><code>${window.hljs.highlightAuto(str).value}</code></pre>`;
       }
     } else {
-      console.warn("Smartmd: highlight used but not import")
+      throw new ReferenceError("Smartmd: highlight used but not import")
     }
   }
 

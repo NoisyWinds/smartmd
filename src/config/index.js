@@ -25,8 +25,8 @@ export default {
   isFullScreen: false,
   isPreviewActive: false,
   statusbar: ['block', 'autoSave', 'lines', 'words', 'cursor'],
-  uploadsPath: "./upload",
   uploads: {
+    url:'"./upload"',
     type: ['jpeg', 'png', 'bmp', 'gif', 'jpg'],
     maxSize: 4096,
     typeError: 'Image support format {type}.',

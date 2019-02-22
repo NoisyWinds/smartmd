@@ -10,7 +10,18 @@
 </p>
 A markdown text editor compatible almost all markdown syntax, like Mathematical formula、flowchart、upload images...  
 
-### Get smartmd
+##  Screenshots
+editor demo: [Demo](https://xiaoqingxin.site/editor/write)   
+js render page [Demo](https://xiaoqingxin.site/editor/js-show)  
+php render page [Demo](https://xiaoqingxin.site/editor/php-show)
+  
+  ![](./docs/screenshot.png)
+  --- 
+  ![](./docs/screenshot_02.gif) 
+  ---
+  ![](./docs/screenshot_03.gif)
+
+## Get smartmd
 ```node
 npm install smartmd 
 ```
@@ -20,14 +31,14 @@ npm install smartmd
 <script src="dist/smartmd.min.js"></script>
 </head>
 ```
-### Quickstart
+## Quickstart
 ```javascript
 var editor = new Smartmd({
    el: "#editor",
    height: "400px"
 });
 ```
-### Build Setup
+## Build Setup
 ```node
 # install reference
 npm install smartmd 
@@ -39,7 +50,7 @@ npm run dev
 npm run build
 ```
 
-### Features
+## Features
 - Markdown syntax parse by Markdown-It and it's plugins
 - LaTeX mathematical expressions using KaTeX
 - Diagrams and flowcharts using Mermaid
@@ -47,7 +58,7 @@ npm run build
 - Emoji
 - Images upload (need server)
 
-### Issue
+## Issue
 welcome repo bug reports, feature requests or optimization method.
 
 ### Reference:
