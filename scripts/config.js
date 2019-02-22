@@ -103,7 +103,8 @@ function genConfig(name) {
 
 if (process.env.TARGET) {
   module.exports = genConfig(process.env.TARGET)
-} else {
+}
+else {
   exports.getBuild = genConfig;
   exports.getAllBuilds = () => Object.keys(builds).map(genConfig)
 }

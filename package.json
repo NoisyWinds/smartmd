@@ -16,7 +16,7 @@
     "lint": "eslint src"
   },
   "homepage": "https://github.com/NoisyWinds/smartmd",
-  "main": "./src/js/smartmd.min.js",
+  "main": "./src/Smartmd.js",
   "license": "MIT",
   "author": {
     "name": "NoisyWinds",
@@ -51,7 +51,7 @@
     "rollup-plugin-json": "^3.1.0",
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-resolve": "^3.0.0",
-    "rollup-plugin-postcss": "^1.6.3",
+    "rollup-plugin-postcss": "^2.0.3",
     "rollup-plugin-replace": "^2.0.0",
     "terser": "^3.11.0",
     "zlib": "^1.0.5"

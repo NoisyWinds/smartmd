@@ -6,7 +6,8 @@ import * as utils from "./services/utils"
 import initMenu from "./services/menu"
 import initExtends from "./services/extend"
 import Observer from "./services/observer";
-import initState from "./services/state"
+import initState from "./services/state";
+import 'babel-polyfill';
 
 export class Smartmd {
   constructor(options) {
