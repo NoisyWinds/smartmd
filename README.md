@@ -1,7 +1,7 @@
 # Smartmd
 ![](https://xiaoqingxin.site/images/default_img.jpg)
 <p align="center">
- <a href="./docs/api.md">Documentation</a> | <a href="./docs/docs_cn.md">中文文档</a>
+ <a href="./docs/api.md">Documentation</a> | <a href="./docs/api_cn.md">中文文档</a>
 </p>
 <p align="center">
 <a href="https://travis-ci.org/NoisyWinds/smartmd"><img src="https://travis-ci.org/NoisyWinds/smartmd.svg?branch=master"></a>
